@@ -310,14 +310,6 @@ mod tests {
         };
     }
 
-    // TODO: Remove
-    fn check_f64(x: f64, y: f64, test: &str) {
-        // Can use abs_diff_eq!() or relative_eq!().
-        if !approx::relative_eq!(x, y, epsilon = TOL) {
-            panic!("found {}, but expected {} for test {}", x, y, test)
-        }
-    }
-
     macro_rules! check_f64 {
         ( $act:expr, $exp:expr ) => {
             // Can use abs_diff_eq!() or relative_eq!().
@@ -365,63 +357,124 @@ mod tests {
         };
     }
 
+    macro_rules! check {
+        ( $act:expr, $exp:expr ) => {
+            // Handle the case when called like `check!(u32, u32)`.
+            if let (Some(a), Some(e)) = (
+                (&$act as &dyn Any).downcast_ref::<u32>(),
+                (&$exp as &dyn Any).downcast_ref::<u32>(),
+            ) {
+                check_int!(a, e);
+            } else
+            // Handle the case when called like `check!(f64, f64)`.
+            if let (Some(a), Some(e)) = (
+                (&$act as &dyn Any).downcast_ref::<f64>(),
+                (&$exp as &dyn Any).downcast_ref::<f64>(),
+            ) {
+                check_f64!(a, e);
+            } else
+            // Handle the case when called like `check!(Some(), None::<Option<f64>>)`.
+            if let (Some(a), Some(e)) = (
+                (&$act as &dyn Any).downcast_ref::<Option<f64>>(),
+                (&$exp as &dyn Any).downcast_ref::<Option<Option<f64>>>(),
+            ) {
+                match (a, e) {
+                    (None, None) => {}
+                    (Some(ac), Some(Some(ex))) => {
+                        check_f64!(ac, ex)
+                    }
+                    _ => {
+                        panic_with_types!($act, $exp);
+                    }
+                }
+            } else
+            // Handle the case when called like `check!(Some(), Some())`.
+            if let (Some(a), Some(e)) = (
+                (&$act as &dyn Any).downcast_ref::<Option<f64>>(),
+                (&$exp as &dyn Any).downcast_ref::<Option<f64>>(),
+            ) {
+                match (a, e) {
+                    (None, None) => {}
+                    (Some(ac), Some(ex)) => {
+                        check_f64!(ac, ex)
+                    }
+                    _ => {
+                        panic_with_types!($act, $exp);
+                    }
+                }
+            } else {
+                // Handle others by panicking, showing the types.
+                panic_with_types!($act, $exp);
+            }
+        };
+    }
+
     #[test]
-    fn test_check1() {
-        check_int!(0.0, 0.0);
-        check_int!(1.0, 1.0);
+    fn test_check_star() {
+        check_int!(0, 0);
+        check_int!(1, 1);
         check_f64!(0.0, 0.0);
         check_f64!(1.0, 1.0);
         check_opt_f64!(Some(0.0), Some(0.0));
         check_opt_f64!(Some(1.0), Some(1.0));
     }
+    #[test]
+    fn test_check1() {
+        check!(0u32, 0u32);
+        check!(1u32, 1u32);
+        check!(0.0, 0.0);
+        check!(1.0, 1.0);
+        check!(Some(0.0), Some(0.0));
+        check!(Some(1.0), Some(1.0));
+    }
 
     #[test]
     #[should_panic]
     fn test_check_panic1() {
-        check_opt_f64!(Some(0.0), None::<Option<f64>>);
+        check!(Some(0.0), None::<Option<f64>>);
     }
 
     #[test]
     #[should_panic]
     fn test_check_panic2() {
-        // Panicks because the `(Some(Some()), Some(Some()))` case isn't handled in
-        // check_opt_f64!(). It's not used in the tests because the first value passed into check
-        // function is the actual value, never `None::<Option<f64>>`.
-        check_opt_f64!(None::<Option<f64>>, None::<Option<f64>>);
+        // Panicks because the `(Some(Some()), Some(Some()))` case isn't handled in check!(). It's
+        // not used because in the tests, the first value passed into check macro is the actual
+        // value, never `None::<Option<f64>>`.
+        check!(None::<Option<f64>>, None::<Option<f64>>);
     }
 
     #[test]
     #[should_panic]
     fn test_check_panic3() {
         // Panicks because the `(Some(Some()), Some())` case isn't handled in check_opt_f64!(). It's
-        // not used in the tests because the first value passed into check function is the actual
+        // not used because in the tests, the first value passed into check function is the actual
         // value, never `None::<Option<f64>>`.
-        check_opt_f64!(None::<Option<f64>>, Some(7.0));
+        check!(None::<Option<f64>>, Some(7.0));
     }
 
     #[test]
     #[should_panic]
     fn test_check_panic4() {
-        check_opt_f64!(Some(6.0), Some(8.0));
+        check!(Some(6.0), Some(8.0));
     }
 
     #[test]
     fn test_update() {
         let mut d = Stats::new();
         d.update(2.3);
-        check_int!(d.count(), 1);
-        check_f64!(d.min(), 2.3);
-        check_f64!(d.max(), 2.3);
-        check_f64!(d.sum(), 2.3);
-        check_f64!(d.mean(), 2.3);
-        check_opt_f64!(d.population_variance(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_variance(), None::<Option<f64>>);
-        check_opt_f64!(d.population_standard_deviation(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_standard_deviation(), None::<Option<f64>>);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 1u32);
+        check!(d.min(), 2.3);
+        check!(d.max(), 2.3);
+        check!(d.sum(), 2.3);
+        check!(d.mean(), 2.3);
+        check!(d.population_variance(), None::<Option<f64>>);
+        check!(d.sample_variance(), None::<Option<f64>>);
+        check!(d.population_standard_deviation(), None::<Option<f64>>);
+        check!(d.sample_standard_deviation(), None::<Option<f64>>);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -430,19 +483,19 @@ mod tests {
         let mut d = Stats::new();
         d.update(2.3);
         d.update(0.4);
-        check_int!(d.count(), 2);
-        check_f64!(d.min(), 0.4);
-        check_f64!(d.max(), 2.3);
-        check_f64!(d.sum(), 2.7);
-        check_f64!(d.mean(), 1.35);
-        check_f64!(d.population_variance().unwrap(), 0.9025);
-        check_f64!(d.sample_variance().unwrap(), 1.805);
-        check_f64!(d.population_standard_deviation().unwrap(), 0.95);
-        check_f64!(d.sample_standard_deviation().unwrap(), 1.34350288425444);
-        check_f64!(d.population_skew().unwrap(), 0.0);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_f64!(d.population_kurtosis().unwrap(), -2.0);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 2u32);
+        check!(d.min(), 0.4);
+        check!(d.max(), 2.3);
+        check!(d.sum(), 2.7);
+        check!(d.mean(), 1.35);
+        check!(d.population_variance().unwrap(), 0.9025);
+        check!(d.sample_variance().unwrap(), 1.805);
+        check!(d.population_standard_deviation().unwrap(), 0.95);
+        check!(d.sample_standard_deviation().unwrap(), 1.34350288425444);
+        check!(d.population_skew().unwrap(), 0.0);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis().unwrap(), -2.0);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -452,19 +505,19 @@ mod tests {
         d.update(2.3);
         d.update(0.4);
         d.update(-3.4);
-        check_int!(d.count(), 3);
-        check_f64!(d.min(), -3.4);
-        check_f64!(d.max(), 2.3);
-        check_f64!(d.sum(), -0.7);
-        check_f64!(d.mean(), -0.2333333333333334);
-        check_f64!(d.population_variance().unwrap(), 5.615555555555554);
-        check_f64!(d.sample_variance().unwrap(), 8.42333333333333);
-        check_f64!(d.population_standard_deviation().unwrap(), 2.36971634495683);
-        check_f64!(d.sample_standard_deviation().unwrap(), 2.90229794013870);
-        check_f64!(d.population_skew().unwrap(), -0.3818017741606063);
-        check_opt_f64!(d.sample_skew(), Some(-0.9352195295828242));
-        check_f64!(d.population_kurtosis().unwrap(), -1.5);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 3u32);
+        check!(d.min(), -3.4);
+        check!(d.max(), 2.3);
+        check!(d.sum(), -0.7);
+        check!(d.mean(), -0.2333333333333334);
+        check!(d.population_variance().unwrap(), 5.615555555555554);
+        check!(d.sample_variance().unwrap(), 8.42333333333333);
+        check!(d.population_standard_deviation().unwrap(), 2.36971634495683);
+        check!(d.sample_standard_deviation().unwrap(), 2.90229794013870);
+        check!(d.population_skew().unwrap(), -0.3818017741606063);
+        check!(d.sample_skew(), Some(-0.9352195295828242));
+        check!(d.population_kurtosis().unwrap(), -1.5);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -476,22 +529,22 @@ mod tests {
         d.update(2.0);
         d.update(3.0);
         d.update(4.0);
-        check_int!(d.count(), 4);
-        check_f64!(d.min(), 1.0);
-        check_f64!(d.max(), 4.0);
-        check_f64!(d.sum(), 10.0);
-        check_f64!(d.mean(), 2.5);
-        check_f64!(d.population_variance().unwrap(), 1.25);
-        check_f64!(d.sample_variance().unwrap(), 1.666666666666667);
-        check_f64!(
+        check!(d.count(), 4u32);
+        check!(d.min(), 1.0);
+        check!(d.max(), 4.0);
+        check!(d.sum(), 10.0);
+        check!(d.mean(), 2.5);
+        check!(d.population_variance().unwrap(), 1.25);
+        check!(d.sample_variance().unwrap(), 1.666666666666667);
+        check!(
             d.population_standard_deviation().unwrap(),
             1.118033988749895
         );
-        check_f64!(d.sample_standard_deviation().unwrap(), 1.290994448735806);
-        check_f64!(d.population_skew().unwrap(), 0.0);
-        check_f64!(d.sample_skew().unwrap(), 0.0);
-        check_f64!(d.population_kurtosis().unwrap(), -1.36);
-        check_f64!(d.sample_kurtosis().unwrap(), -1.2);
+        check!(d.sample_standard_deviation().unwrap(), 1.290994448735806);
+        check!(d.population_skew().unwrap(), 0.0);
+        check!(d.sample_skew().unwrap(), 0.0);
+        check!(d.population_kurtosis().unwrap(), -1.36);
+        check!(d.sample_kurtosis().unwrap(), -1.2);
     }
 
     #[test]
@@ -504,22 +557,22 @@ mod tests {
         d.update(3.0);
         d.update(4.0);
         d.update(5.0);
-        check_int!(d.count(), 5);
-        check_f64!(d.min(), 1.0);
-        check_f64!(d.max(), 5.0);
-        check_f64!(d.sum(), 15.0);
-        check_f64!(d.mean(), 3.0);
-        check_f64!(d.population_variance().unwrap(), 2.0);
-        check_f64!(d.sample_variance().unwrap(), 2.5);
-        check_f64!(
+        check!(d.count(), 5u32);
+        check!(d.min(), 1.0);
+        check!(d.max(), 5.0);
+        check!(d.sum(), 15.0);
+        check!(d.mean(), 3.0);
+        check!(d.population_variance().unwrap(), 2.0);
+        check!(d.sample_variance().unwrap(), 2.5);
+        check!(
             d.population_standard_deviation().unwrap(),
             1.414213562373095
         );
-        check_f64!(d.sample_standard_deviation().unwrap(), 1.5811388300841898);
-        check_f64!(d.population_skew().unwrap(), 0.0);
-        check_f64!(d.sample_skew().unwrap(), 0.0);
-        check_f64!(d.population_kurtosis().unwrap(), -1.3);
-        check_f64!(d.sample_kurtosis().unwrap(), -1.2);
+        check!(d.sample_standard_deviation().unwrap(), 1.5811388300841898);
+        check!(d.population_skew().unwrap(), 0.0);
+        check!(d.sample_skew().unwrap(), 0.0);
+        check!(d.population_kurtosis().unwrap(), -1.3);
+        check!(d.sample_kurtosis().unwrap(), -1.2);
     }
 
     #[test]
@@ -531,7 +584,7 @@ mod tests {
         // 	for _, v := range a {
         // 		d.Update(v)
         // 	}
-        // check_int!(d.count(), 10);
+        // check!(d.count(), 10);
         // check_f64(d.min(), -123.4, "min");
         // check_f64(d.max(), 115.0, "max");
         // check_f64(d.sum(), 62.83, "sum");
@@ -570,7 +623,7 @@ mod tests {
         // 	a := []float64{1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3}
         // 	// load the first half of the array
         // 	d.UpdateArray(a[:5])
-        // check_int!(d.count(), 5);
+        // check!(d.count(), 5);
         // check_f64(d.min(), -2.0, "min");
         // check_f64(d.max(), 115.0, "max");
         // check_f64(d.sum(), 174, "sum");
@@ -598,7 +651,7 @@ mod tests {
 
         // 	// load rest of array. The results will be cumulative.
         // 	d.UpdateArray(a[5:])
-        // check_int!(d.count(), 10);
+        // check!(d.count(), 10);
         // check_f64(d.min(), -123.4, "min");
         // check_f64(d.max(), 115.0, "max");
         // check_f64(d.sum(), 62.83, "sum");
@@ -632,7 +685,7 @@ mod tests {
     // Test the batch functions. Calculate the descriptive stats on the whole array.
     // func TestArrayStats(t *testing.T) {
     // 	a := []float64{1.0, 2.0, 3.0, 4.0, 5.0}
-    // check_int!(StatsCount(a), 5);
+    // check!(StatsCount(a), 5);
     // check_f64(StatsMin(a), 1.0, "min");
     // check_f64(StatsMax(a), 5.0, "max");
     // check_f64(StatsSum(a), 15.0, "sum");
@@ -649,7 +702,7 @@ mod tests {
 
     // func TestArrayStats2(t *testing.T) {
     // 	a := []float64{1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3}
-    // check_int!(StatsCount(a), 10);
+    // check!(StatsCount(a), 10);
     // check_f64(StatsMin(a), -123.4, "min");
     // check_f64(StatsMax(a), 115.0, "max");
     // check_f64(StatsSum(a), 62.83, "sum");
@@ -762,19 +815,19 @@ mod tests {
         let mut d = Stats::new();
 
         d.update(0.0);
-        check_int!(d.count(), 1);
-        check_f64(d.min(), 0.0, "min");
-        check_f64(d.max(), 0.0, "max");
-        check_f64(d.sum(), 0.0, "sum");
-        check_f64(d.mean(), 0.0, "mean");
-        check_opt_f64!(d.population_variance(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_variance(), None::<Option<f64>>);
-        check_opt_f64!(d.population_standard_deviation(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_standard_deviation(), None::<Option<f64>>);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 1u32);
+        check!(d.min(), 0.0);
+        check!(d.max(), 0.0);
+        check!(d.sum(), 0.0);
+        check!(d.mean(), 0.0);
+        check!(d.population_variance(), None::<Option<f64>>);
+        check!(d.sample_variance(), None::<Option<f64>>);
+        check!(d.population_standard_deviation(), None::<Option<f64>>);
+        check!(d.sample_standard_deviation(), None::<Option<f64>>);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -784,19 +837,19 @@ mod tests {
 
         d.update(0.0);
         d.update(0.0);
-        check_int!(d.count(), 2);
-        check_f64!(d.min(), 0.0);
-        check_f64!(d.max(), 0.0);
-        check_f64!(d.sum(), 0.0);
-        check_f64!(d.mean(), 0.0);
-        check_f64!(d.population_variance().unwrap(), 0.0);
-        check_f64!(d.sample_variance().unwrap(), 0.0);
-        check_f64!(d.population_standard_deviation().unwrap(), 0.0);
-        check_f64!(d.sample_standard_deviation().unwrap(), 0.0);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 2u32);
+        check!(d.min(), 0.0);
+        check!(d.max(), 0.0);
+        check!(d.sum(), 0.0);
+        check!(d.mean(), 0.0);
+        check!(d.population_variance().unwrap(), 0.0);
+        check!(d.sample_variance().unwrap(), 0.0);
+        check!(d.population_standard_deviation().unwrap(), 0.0);
+        check!(d.sample_standard_deviation().unwrap(), 0.0);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -807,19 +860,19 @@ mod tests {
         d.update(0.0);
         d.update(0.0);
         d.update(0.0);
-        check_int!(d.count(), 3);
-        check_f64!(d.min(), 0.0);
-        check_f64!(d.max(), 0.0);
-        check_f64!(d.sum(), 0.0);
-        check_f64!(d.mean(), 0.0);
-        check_f64!(d.population_variance().unwrap(), 0.0);
-        check_f64!(d.sample_variance().unwrap(), 0.0);
-        check_f64!(d.population_standard_deviation().unwrap(), 0.0);
-        check_f64!(d.sample_standard_deviation().unwrap(), 0.0);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 3u32);
+        check!(d.min(), 0.0);
+        check!(d.max(), 0.0);
+        check!(d.sum(), 0.0);
+        check!(d.mean(), 0.0);
+        check!(d.population_variance().unwrap(), 0.0);
+        check!(d.sample_variance().unwrap(), 0.0);
+        check!(d.population_standard_deviation().unwrap(), 0.0);
+        check!(d.sample_standard_deviation().unwrap(), 0.0);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -831,19 +884,19 @@ mod tests {
         d.update(0.0);
         d.update(0.0);
         d.update(0.0);
-        check_int!(d.count(), 4);
-        check_f64!(d.min(), 0.0);
-        check_f64!(d.max(), 0.0);
-        check_f64!(d.sum(), 0.0);
-        check_f64!(d.mean(), 0.0);
-        check_f64!(d.population_variance().unwrap(), 0.0);
-        check_f64!(d.sample_variance().unwrap(), 0.0);
-        check_f64!(d.population_standard_deviation().unwrap(), 0.0);
-        check_f64!(d.sample_standard_deviation().unwrap(), 0.0);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 4u32);
+        check!(d.min(), 0.0);
+        check!(d.max(), 0.0);
+        check!(d.sum(), 0.0);
+        check!(d.mean(), 0.0);
+        check!(d.population_variance().unwrap(), 0.0);
+        check!(d.sample_variance().unwrap(), 0.0);
+        check!(d.population_standard_deviation().unwrap(), 0.0);
+        check!(d.sample_standard_deviation().unwrap(), 0.0);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -856,19 +909,19 @@ mod tests {
         d.update(0.0);
         d.update(0.0);
         d.update(0.0);
-        check_int!(d.count(), 5);
-        check_f64!(d.min(), 0.0);
-        check_f64!(d.max(), 0.0);
-        check_f64!(d.sum(), 0.0);
-        check_f64!(d.mean(), 0.0);
-        check_f64!(d.population_variance().unwrap(), 0.0);
-        check_f64!(d.sample_variance().unwrap(), 0.0);
-        check_f64!(d.population_standard_deviation().unwrap(), 0.0);
-        check_f64!(d.sample_standard_deviation().unwrap(), 0.0);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 5u32);
+        check!(d.min(), 0.0);
+        check!(d.max(), 0.0);
+        check!(d.sum(), 0.0);
+        check!(d.mean(), 0.0);
+        check!(d.population_variance().unwrap(), 0.0);
+        check!(d.sample_variance().unwrap(), 0.0);
+        check!(d.population_standard_deviation().unwrap(), 0.0);
+        check!(d.sample_standard_deviation().unwrap(), 0.0);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 
     #[test]
@@ -880,18 +933,18 @@ mod tests {
         for v in a {
             d.update(v)
         }
-        check_int!(d.count(), 10);
-        check_f64!(d.min(), 0.0);
-        check_f64!(d.max(), 0.0);
-        check_f64!(d.sum(), 0.0);
-        check_f64!(d.mean(), 0.0);
-        check_f64!(d.population_variance().unwrap(), 0.0);
-        check_f64!(d.sample_variance().unwrap(), 0.0);
-        check_f64!(d.population_standard_deviation().unwrap(), 0.0);
-        check_f64!(d.sample_standard_deviation().unwrap(), 0.0);
-        check_opt_f64!(d.population_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_skew(), None::<Option<f64>>);
-        check_opt_f64!(d.population_kurtosis(), None::<Option<f64>>);
-        check_opt_f64!(d.sample_kurtosis(), None::<Option<f64>>);
+        check!(d.count(), 10u32);
+        check!(d.min(), 0.0);
+        check!(d.max(), 0.0);
+        check!(d.sum(), 0.0);
+        check!(d.mean(), 0.0);
+        check!(d.population_variance().unwrap(), 0.0);
+        check!(d.sample_variance().unwrap(), 0.0);
+        check!(d.population_standard_deviation().unwrap(), 0.0);
+        check!(d.sample_standard_deviation().unwrap(), 0.0);
+        check!(d.population_skew(), None::<Option<f64>>);
+        check!(d.sample_skew(), None::<Option<f64>>);
+        check!(d.population_kurtosis(), None::<Option<f64>>);
+        check!(d.sample_kurtosis(), None::<Option<f64>>);
     }
 }
