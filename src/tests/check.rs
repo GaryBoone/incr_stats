@@ -98,7 +98,19 @@ mod tests {
 
     #[test]
     #[should_panic]
+    fn test_check_panic0() {
+        chk!(0u32, 1u32);
+    }
+
+    #[test]
+    #[should_panic]
     fn test_check_panic1() {
+        chk!(0.0, 1.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_check_panic2() {
         chk!(Some(0.0), None);
     }
 
