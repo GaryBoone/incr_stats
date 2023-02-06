@@ -1,11 +1,32 @@
 use crate::chk;
-use crate::tests::check::Checker;
-use crate::Stats;
+use crate::incr::Stats;
 
 #[test]
-fn test_update() {
+fn test_update0() {
+    let d = Stats::new();
+    // With no values added, the first moment, the mean, is zero and none of the
+    // other moments are defined.
+    chk!(d.count(), 0);
+    chk!(d.min(), 0.0);
+    chk!(d.max(), 0.0);
+    chk!(d.sum(), 0.0);
+    chk!(d.mean(), 0.0);
+    chk!(d.population_variance(), None);
+    chk!(d.sample_variance(), None);
+    chk!(d.population_standard_deviation(), None);
+    chk!(d.sample_standard_deviation(), None);
+    chk!(d.population_skew(), None);
+    chk!(d.sample_skew(), None);
+    chk!(d.population_kurtosis(), None);
+    chk!(d.sample_kurtosis(), None);
+}
+
+#[test]
+fn test_update1() {
     let mut d = Stats::new();
     d.update(2.3);
+    // With one values added, the first moment, the mean, exists but none of the other moments are
+    // defined.
     chk!(d.count(), 1u32);
     chk!(d.min(), 2.3);
     chk!(d.max(), 2.3);
@@ -22,11 +43,13 @@ fn test_update() {
 }
 
 #[test]
-// Update() 2 values
+// Call update() with 2 values
 fn test_update2() {
     let mut d = Stats::new();
     d.update(2.3);
     d.update(0.4);
+    // With two values added, the first two moments exist: the mean and the variance. The next two,
+    // the skew and kurtosis, are defined for the population, but not for samples.
     chk!(d.count(), 2u32);
     chk!(d.min(), 0.4);
     chk!(d.max(), 2.3);
@@ -43,12 +66,14 @@ fn test_update2() {
 }
 
 #[test]
-// Update() 3 values.
+// Call update() with 3 values.
 fn test_update3() {
     let mut d = Stats::new();
     d.update(2.3);
     d.update(0.4);
     d.update(-3.4);
+    // With three values added, the first three moments exist: the mean, the variance, and the skew
+    // are defined. The population kurtosis exists, but not the sample kurtosis.
     chk!(d.count(), 3u32);
     chk!(d.min(), -3.4);
     chk!(d.max(), 2.3);
@@ -65,14 +90,16 @@ fn test_update3() {
 }
 
 #[test]
-// Update() 4 values. Now all of the statistics are available.
+// Call update() with 4 values.
 fn test_update4() {
     let mut d = Stats::new();
-
     d.update(1.0);
     d.update(2.0);
     d.update(3.0);
     d.update(4.0);
+    // With four values added, all of the first four moments of the statistics are available: the
+    // mean, the variance, the skew, and the kurtosis, both populations and samples. Note that this
+    // is not always the case, as the all-zeros case below shows.
     chk!(d.count(), 4u32);
     chk!(d.min(), 1.0);
     chk!(d.max(), 4.0);
@@ -92,7 +119,7 @@ fn test_update4() {
 }
 
 #[test]
-// Update() 5 values.
+// Call update() with 5 values.
 fn test_update5() {
     let mut d = Stats::new();
 
@@ -120,43 +147,31 @@ fn test_update5() {
 }
 
 #[test]
-// Update() 10 values.
+// Call update() with 10 values.
 fn test_update10() {
-    let mut _d = Stats::new();
-
-    // 	a := []float64{1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3}
-    // 	for _, v := range a {
-    // 		d.Update(v)
-    // 	}
-    // chk!(d.count(), 10);
-    // check_f64(d.min(), -123.4, "min");
-    // check_f64(d.max(), 115.0, "max");
-    // check_f64(d.sum(), 62.83, "sum");
-    // check_f64(d.mean(), 6.283, "mean");
-    // check_f64(
-    //     d.population_variance().unwrap(),
-    //     3165.19316100,
-    //     "population_variance",
-    // );
-    // check_f64(d.sample_variance(), 3516.88129, "sample_variance");
-    // check_f64(
-    //     d.population_standard_deviation(),
-    //     56.2600494223032,
-    //     "population_standard_deviation",
-    // );
-    // check_f64(
-    //     d.sample_standard_deviation(),
-    //     59.3032991493728,
-    //     "sample_standard_deviation",
-    // );
-    // check_f64(d.population_skew().unwrap(), -0.4770396201629045, "population_skew");
-    // check_f64(d.sample_skew().unwrap(), -0.565699400196136, "sample_skew");
-    // check_f64(
-    //     d.population_kurtosis().unwrap(),
-    //     1.253240236214162,
-    //     "population_kurtosis",
-    // );
-    // check_f64(d.sample_kurtosis(), 3.179835417592894, "sample_kurtosis");
+    let mut d = Stats::new();
+    let a = vec![
+        1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3,
+    ];
+    for v in a {
+        d.update(v);
+    }
+    chk!(d.count(), 10);
+    chk!(d.min(), -123.4);
+    chk!(d.max(), 115.0);
+    chk!(d.sum(), 62.83);
+    chk!(d.mean(), 6.283);
+    chk!(d.population_variance().unwrap(), 3165.19316100);
+    chk!(d.sample_variance().unwrap(), 3516.88129);
+    chk!(
+        d.population_standard_deviation().unwrap(),
+        56.26004942230321
+    );
+    chk!(d.sample_standard_deviation().unwrap(), 59.3032991493728);
+    chk!(d.population_skew().unwrap(), -0.4770396201629045);
+    chk!(d.sample_skew().unwrap(), -0.565699400196136);
+    chk!(d.population_kurtosis().unwrap(), 1.253240236214162);
+    chk!(d.sample_kurtosis().unwrap(), 3.179835417592894);
 }
 
 //
@@ -164,9 +179,8 @@ fn test_update10() {
 // Degenerate examples tests
 //
 //
-
 #[test]
-// Update() 1 0 value
+// Call update() with 1 zero value.
 fn test_update01() {
     let mut d = Stats::new();
 
@@ -187,7 +201,7 @@ fn test_update01() {
 }
 
 #[test]
-// Update() 2 0 values
+// Call update() with 2 zero values.
 fn test_update02() {
     let mut d = Stats::new();
 
@@ -209,7 +223,7 @@ fn test_update02() {
 }
 
 #[test]
-// Update() 3 0 values.
+// Call update() with 3 zero values.
 fn test_update03() {
     let mut d = Stats::new();
 
@@ -232,7 +246,7 @@ fn test_update03() {
 }
 
 #[test]
-// Update() 4 0 values.
+// Call update() with 4 zero values.
 fn test_update04() {
     let mut d = Stats::new();
 
@@ -256,7 +270,7 @@ fn test_update04() {
 }
 
 #[test]
-// Update() 5 0 values.
+// Call update() with 5 zero values.
 fn test_update05() {
     let mut d = Stats::new();
 
@@ -281,7 +295,7 @@ fn test_update05() {
 }
 
 #[test]
-// Update() 10 0 values.
+// Call update() with 10 zero values.
 fn test_update010() {
     let mut d = Stats::new();
 

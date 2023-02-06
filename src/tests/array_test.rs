@@ -1,6 +1,5 @@
 use crate::chk;
-use crate::tests::check::Checker;
-use crate::Stats;
+use crate::incr::Stats;
 
 #[test]
 // Update by array. In this case, we use slices to update via half of the array at a time.

@@ -66,7 +66,7 @@ impl Checker<Option<f64>> for Option<f64> {
 #[macro_export]
 macro_rules! chk {
     ($e:expr, $value:expr) => {
-        Checker::assert($e, $value, line!())
+        crate::tests::check::Checker::assert($e, $value, line!())
     };
 }
 
