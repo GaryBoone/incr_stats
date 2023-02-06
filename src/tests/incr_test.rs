@@ -4,8 +4,8 @@ use crate::incr::Stats;
 #[test]
 fn test_update0() {
     let d = Stats::new();
-    // With no values added, the first moment, the mean, is zero and none of the
-    // other moments are defined.
+    // With no values added, the first moment, the mean, is zero and none of the other moments are
+    // defined.
     chk!(d.count(), 0);
     chk!(d.min(), 0.0);
     chk!(d.max(), 0.0);
@@ -25,7 +25,7 @@ fn test_update0() {
 fn test_update1() {
     let mut d = Stats::new();
     d.update(2.3);
-    // With one values added, the first moment, the mean, exists but none of the other moments are
+    // With one value added, the first moment, the mean, exists but none of the other moments are
     // defined.
     chk!(d.count(), 1u32);
     chk!(d.min(), 2.3);

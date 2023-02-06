@@ -28,92 +28,148 @@ pub fn stats_max(data: &[f64]) -> Option<f64> {
     }
     let mut max = data[0];
     for v in data {
-        if v > max {
+        if v > &max {
             max = *v;
         }
     }
     Some(max)
 }
 
-// fn stats_sum(data: &[f64]) (sum float64) {
-// 	for v in data {
-// 		sum += v
-// 	}
-// 	return
-// }
+pub fn stats_sum(data: &[f64]) -> f64 {
+    let mut sum = 0.0;
+    for v in data {
+        sum += *v;
+    }
+    sum
+}
 
-// fn stats_mean(data: &[f64]) -> f64 {
-// 	return StatsSum(data) / float64(len(data))
-// }
+pub fn stats_mean(data: &[f64]) -> Option<f64> {
+    let n = data.len();
+    if n == 0 {
+        return None;
+    }
+    Some(stats_sum(data) / (n as f64))
+}
 
-// func sumSquaredDeltas(data []float64) (ssd float64) {
-// 	mean := StatsMean(data)
-// 	for v in data {
-// 		delta := v - mean
-// 		ssd += delta * delta
-// 	}
-// 	return
-// }
+fn sum_squared_deltas(data: &[f64]) -> Option<f64> {
+    if let Some(mean) = stats_mean(data) {
+        let mut ssd = 0.0;
+        for v in data {
+            let delta = v - mean;
+            ssd += delta * delta;
+        }
+        return Some(ssd);
+    }
+    None
+}
 
-// fn stats_population_variance(data: &[f64]) -> f64 {
-// 	n := float64(len(data))
-// 	ssd := sumSquaredDeltas(data)
-// 	return ssd / n
-// }
+pub fn stats_population_variance(data: &[f64]) -> Option<f64> {
+    if let Some(ssd) = sum_squared_deltas(data) {
+        let n = data.len() as f64;
+        return Some(ssd / n);
+    }
+    None
+}
 
-// fn stats_sample_variance(data: &[f64]) -> f64 {
-// 	n := float64(len(data))
-// 	ssd := sumSquaredDeltas(data)
-// 	return ssd / (n - 1.0)
-// }
+pub fn stats_sample_variance(data: &[f64]) -> Option<f64> {
+    if let Some(ssd) = sum_squared_deltas(data) {
+        let nm1 = (data.len() - 1) as f64;
+        return Some(ssd / nm1);
+    }
+    None
+}
 
-// fn stats_population_standard_deviation(data: &[f64]) -> f64 {
-// 	return math.Sqrt(StatsPopulationVariance(data))
-// }
+pub fn stats_population_standard_deviation(data: &[f64]) -> Option<f64> {
+    if let Some(spv) = stats_population_variance(data) {
+        return Some(f64::sqrt(spv));
+    }
+    None
+}
 
-// fn stats_sample_standard_deviation(data: &[f64]) -> f64 {
-// 	return math.Sqrt(StatsSampleVariance(data))
-// }
+pub fn stats_sample_standard_deviation(data: &[f64]) -> Option<f64> {
+    if let Some(ssv) = stats_sample_variance(data) {
+        return Some(f64::sqrt(ssv));
+    }
+    None
+}
 
-// fn stats_population_skew(data: &[f64]) (skew float64) {
-// 	mean := StatsMean(data)
-// 	n := float64(len(data))
+pub fn stats_population_skew(data: &[f64]) -> Option<f64> {
+    if let Some(mean) = stats_mean(data) {
+        let mut sum3 = 0.0;
+        for v in data {
+            let delta = v - mean;
+            sum3 += delta * delta * delta;
+        }
 
-// 	sum3 := 0.0
-// 	for v in data {
-// 		delta := v - mean
-// 		sum3 += delta * delta * delta
-// 	}
+        if let Some(ssv) = stats_population_variance(data) {
+            let n = data.len() as f64;
+            let variance = f64::sqrt(ssv);
+            let skew = sum3 / n / (variance * variance * variance);
+            return Some(skew);
+        }
+    }
+    None
+}
 
-// 	variance := math.Sqrt(StatsPopulationVariance(data))
-// 	skew = sum3 / n / (variance * variance * variance)
-// 	return
-// }
+pub fn stats_sample_skew(data: &[f64]) -> Option<f64> {
+    if let Some(pop_skew) = stats_population_skew(data) {
+        let n = data.len() as f64;
+        let skew = f64::sqrt(n * (n - 1.0)) / (n - 2.0) * pop_skew;
+        return Some(skew);
+    }
+    None
+}
 
-// fn stats_sample_skew(data: &[f64]) -> f64 {
-// 	popSkew := StatsPopulationSkew(data)
-// 	n := float64(len(data))
-// 	return math.Sqrt(n*(n-1.0)) / (n - 2.0) * popSkew
-// }
+// The kurtosis functions return _excess_ kurtosis
+pub fn stats_population_kurtosis(data: &[f64]) -> Option<f64> {
+    if let Some(mean) = stats_mean(data) {
+        let n = data.len() as f64;
 
-// // The kurtosis functions return _excess_ kurtosis
-// fn stats_population_kurtosis(data: &[f64]) (kurtosis float64) {
-// 	mean := StatsMean(data)
-// 	n := float64(len(data))
+        let mut sum4 = 0.0;
+        for v in data {
+            let delta = v - mean;
+            sum4 += delta * delta * delta * delta;
+        }
 
-// 	sum4 := 0.0
-// 	for v in data {
-// 		delta := v - mean
-// 		sum4 += delta * delta * delta * delta
-// 	}
+        if let Some(variance) = stats_population_variance(data) {
+            let kurtosis = sum4 / (variance * variance) / n - 3.0;
+            return Some(kurtosis);
+        }
+    }
+    None
+}
 
-// 	variance := StatsPopulationVariance(data)
-// 	kurtosis = sum4/(variance*variance)/n - 3.0
-// 	return
-// }
+pub fn stats_sample_kurtosis(data: &[f64]) -> Option<f64> {
+    if let Some(population_kurtosis) = stats_population_kurtosis(data) {
+        let n = data.len() as f64;
+        let kurtosis =
+            (n - 1.0) / ((n - 2.0) * (n - 3.0)) * ((n + 1.0) * population_kurtosis + 6.0);
+        return Some(kurtosis);
+    }
+    None
+}
 
-// fn stats_sample_kurtosis(data: &[f64]) -> f64 {
-// 	populationKurtosis := StatsPopulationKurtosis(data)
-// 	n := float64(len(data))
-// 	return (n - 1.0) / ((n - 2.0) * (n - 3.0)) * ((n+1.0)*populationKurtosis + 6.0)
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // To reduce the file sizes, the unit tests are split into separate files.
+    // Private functions are tested here because child modules have access to
+    // private data. The public functions are tested in the `./tests` directory.
+
+    #[test]
+    fn test_sum_squared_deltas() {
+        assert_eq!(sum_squared_deltas(&vec![]), None);
+        assert_eq!(sum_squared_deltas(&vec![0.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![1.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![2.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![-1.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![0.0, 0.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![1.0, 1.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![2.0, 2.0]), Some(0.0));
+        assert_eq!(sum_squared_deltas(&vec![0.0, 1.0]), Some(0.5));
+        assert_eq!(sum_squared_deltas(&vec![1.0, 2.0]), Some(0.5));
+        assert_eq!(sum_squared_deltas(&vec![-1.0, 0.0]), Some(0.5));
+        assert_eq!(sum_squared_deltas(&vec![-1.0, 0.0, 1.0]), Some(2.0));
+    }
+}
