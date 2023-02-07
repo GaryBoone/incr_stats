@@ -8,3 +8,4 @@ include = ["src/**/*", "LICENSE", "README.md"]
 
 [dependencies]
 approx = "0.5.1"
+thiserror = "1.0.38"

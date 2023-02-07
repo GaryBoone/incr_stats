@@ -1,6 +1,8 @@
+use crate::error::StatsError;
+
 #[derive(Default)]
 pub struct Stats {
-    n_int: u32,
+    n_int: u32, // Maintain the size as an int to avoid frequent casting.
     n: f64,
     min: f64,
     max: f64,
@@ -20,10 +22,10 @@ impl Stats {
 
     // Update the stats with the given value.
     pub fn update(&mut self, x: f64) {
-        if self.n == 0. || x < self.min {
+        if self.n_int == 0 || x < self.min {
             self.min = x
         }
-        if self.n == 0.0 || x > self.max {
+        if self.n_int == 0 || x > self.max {
             self.max = x
         }
         self.sum += x;
@@ -46,20 +48,32 @@ impl Stats {
         self.n_int
     }
 
-    pub fn min(&self) -> f64 {
-        self.min
+    pub fn min(&self) -> Result<f64, StatsError> {
+        if self.n_int == 0 {
+            return Err(StatsError::NoData);
+        }
+        Ok(self.min)
     }
 
-    pub fn max(&self) -> f64 {
-        self.max
+    pub fn max(&self) -> Result<f64, StatsError> {
+        if self.n_int == 0 {
+            return Err(StatsError::NoData);
+        }
+        Ok(self.max)
     }
 
-    pub fn sum(&self) -> f64 {
-        self.sum
+    pub fn sum(&self) -> Result<f64, StatsError> {
+        if self.n_int == 0 {
+            return Err(StatsError::NoData);
+        }
+        Ok(self.sum)
     }
 
-    pub fn mean(&self) -> f64 {
-        self.mean
+    pub fn mean(&self) -> Result<f64, StatsError> {
+        if self.n_int == 0 {
+            return Err(StatsError::NoData);
+        }
+        Ok(self.mean)
     }
 
     // Update the stats with the given array of values using incremental updates for each value. If
@@ -71,11 +85,14 @@ impl Stats {
         }
     }
 
-    pub fn population_variance(&self) -> Option<f64> {
-        if self.n_int == 0 || self.n_int == 1 {
-            return None;
+    pub fn population_variance(&self) -> Result<f64, StatsError> {
+        if self.n_int == 0 {
+            return Err(StatsError::NoData);
         }
-        Some(self.m2 / self.n)
+        if self.n_int == 1 {
+            return Err(StatsError::SecondMomentUndefined);
+        }
+        Ok(self.m2 / self.n)
     }
 
     pub fn sample_variance(&self) -> Option<f64> {
@@ -85,14 +102,11 @@ impl Stats {
         Some(self.m2 / (self.n - 1.0))
     }
 
-    pub fn population_standard_deviation(&self) -> Option<f64> {
+    pub fn population_standard_deviation(&self) -> Result<f64, StatsError> {
         if self.n_int == 0 || self.n_int == 1 {
-            return None;
+            return Err(StatsError::SecondMomentUndefined);
         }
-        match self.population_variance() {
-            None => None,
-            Some(pv) => Some(f64::sqrt(pv)),
-        }
+        Ok(f64::sqrt(self.population_variance()?))
     }
 
     pub fn sample_standard_deviation(&self) -> Option<f64> {
@@ -136,15 +150,18 @@ impl Stats {
         }
     }
 
-    pub fn sample_kurtosis(&self) -> Option<f64> {
-        if self.n_int == 2 || self.n_int == 3 {
-            return None;
+    pub fn sample_kurtosis(&self) -> Result<f64, StatsError> {
+        if self.n_int == 2 {
+            return Err(StatsError::SecondMomentUndefined);
+        }
+        if self.n_int == 3 {
+            return Err(StatsError::ThirdMomentUndefined);
         }
         match self.population_kurtosis() {
-            None => None,
-            Some(k) => Some(
-                (self.n - 1.0) / ((self.n - 2.0) * (self.n - 3.0)) * ((self.n + 1.0) * k + 6.0),
-            ),
+            None => Err(StatsError::FourthMomentUndefined),
+            Some(k) => {
+                Ok((self.n - 1.0) / ((self.n - 2.0) * (self.n - 3.0)) * ((self.n + 1.0) * k + 6.0))
+            }
         }
     }
 }

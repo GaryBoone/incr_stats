@@ -1,3 +1,4 @@
+use crate::error::StatsError;
 use std::fmt::Debug;
 
 // The tolerance required between expected and actual floating point values in all of the tests.
@@ -48,6 +49,23 @@ impl Checker<u32> for u32 {
     }
 }
 
+impl Checker<Result<f64, StatsError>> for Result<f64, StatsError> {
+    fn assert(self, exp: Result<f64, StatsError>, line: u32) {
+        match (self, exp) {
+            (Err(err_act), Err(err_exp)) => {
+                if err_act != err_exp {
+                    panic_with_types(err_act, err_exp, line);
+                }
+            }
+            (Ok(a), Ok(e)) => Checker::assert(a, e, line),
+            _ => {
+                panic_with_types(self, exp, line);
+            }
+        }
+    }
+}
+
+// TODO: Remove after conversion to StatsError.
 impl Checker<Option<f64>> for Option<f64> {
     fn assert(self, exp: Option<f64>, line: u32) {
         match (self, exp) {
@@ -80,9 +98,9 @@ mod tests {
         Checker::assert(1u32, 1u32, line!());
         Checker::assert(0.0, 0.0, line!());
         Checker::assert(1.0, 1.0, line!());
-        Checker::assert(None, None, line!());
-        Checker::assert(Some(0.0), Some(0.0), line!());
-        Checker::assert(Some(1.0), Some(1.0), line!());
+        Checker::assert(Err(StatsError::NoData), Err(StatsError::NoData), line!());
+        Checker::assert(Ok(0.0), Ok(0.0), line!());
+        Checker::assert(Ok(1.0), Ok(1.0), line!());
     }
 
     #[test]
@@ -91,9 +109,9 @@ mod tests {
         chk!(1u32, 1u32);
         chk!(0.0, 0.0);
         chk!(1.0, 1.0);
-        chk!(None, None);
-        chk!(Some(0.0), Some(0.0));
-        chk!(Some(1.0), Some(1.0));
+        chk!(Err(StatsError::NoData), Err(StatsError::NoData));
+        chk!(Ok(0.0), Ok(0.0));
+        chk!(Ok(1.0), Ok(1.0));
     }
 
     #[test]
@@ -111,18 +129,18 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_check_panic2() {
-        chk!(Some(0.0), None);
+        chk!(Ok(0.0), Err(StatsError::NoData));
     }
 
     #[test]
     #[should_panic]
     fn test_check_panic3() {
-        chk!(None, Some(7.0));
+        chk!(Err(StatsError::NoData), Ok(7.0));
     }
 
     #[test]
     #[should_panic]
     fn test_check_panic4() {
-        chk!(Some(6.0), Some(8.0));
+        chk!(Ok(6.0), Ok(8.0));
     }
 }

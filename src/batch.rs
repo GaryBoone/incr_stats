@@ -1,3 +1,5 @@
+use crate::error::StatsError;
+
 //
 //
 // Batch functions
@@ -9,9 +11,9 @@ pub fn stats_count(data: &[f64]) -> u32 {
     data.len() as u32
 }
 
-pub fn stats_min(data: &[f64]) -> Option<f64> {
+pub fn stats_min(data: &[f64]) -> Result<f64, StatsError> {
     if data.len() == 0 {
-        return None;
+        return Err(StatsError::NoData);
     }
     let mut min = data[0];
     for v in data {
@@ -19,12 +21,12 @@ pub fn stats_min(data: &[f64]) -> Option<f64> {
             min = *v;
         }
     }
-    Some(min)
+    Ok(min)
 }
 
-pub fn stats_max(data: &[f64]) -> Option<f64> {
+pub fn stats_max(data: &[f64]) -> Result<f64, StatsError> {
     if data.len() == 0 {
-        return None;
+        return Err(StatsError::NoData);
     }
     let mut max = data[0];
     for v in data {
@@ -32,27 +34,30 @@ pub fn stats_max(data: &[f64]) -> Option<f64> {
             max = *v;
         }
     }
-    Some(max)
+    Ok(max)
 }
 
-pub fn stats_sum(data: &[f64]) -> f64 {
+pub fn stats_sum(data: &[f64]) -> Result<f64, StatsError> {
+    if data.len() == 0 {
+        return Err(StatsError::NoData);
+    }
     let mut sum = 0.0;
     for v in data {
         sum += *v;
     }
-    sum
+    Ok(sum)
 }
 
-pub fn stats_mean(data: &[f64]) -> Option<f64> {
+pub fn stats_mean(data: &[f64]) -> Result<f64, StatsError> {
     let n = data.len();
     if n == 0 {
-        return None;
+        return Err(StatsError::NoData);
     }
-    Some(stats_sum(data) / (n as f64))
+    Ok(stats_sum(data)? / (n as f64))
 }
 
 fn sum_squared_deltas(data: &[f64]) -> Option<f64> {
-    if let Some(mean) = stats_mean(data) {
+    if let Ok(mean) = stats_mean(data) {
         let mut ssd = 0.0;
         for v in data {
             let delta = v - mean;
@@ -72,6 +77,9 @@ pub fn stats_population_variance(data: &[f64]) -> Option<f64> {
 }
 
 pub fn stats_sample_variance(data: &[f64]) -> Option<f64> {
+    if data.len() < 2 {
+        return None;
+    }
     if let Some(ssd) = sum_squared_deltas(data) {
         let nm1 = (data.len() - 1) as f64;
         return Some(ssd / nm1);
@@ -94,7 +102,7 @@ pub fn stats_sample_standard_deviation(data: &[f64]) -> Option<f64> {
 }
 
 pub fn stats_population_skew(data: &[f64]) -> Option<f64> {
-    if let Some(mean) = stats_mean(data) {
+    if let Ok(mean) = stats_mean(data) {
         let mut sum3 = 0.0;
         for v in data {
             let delta = v - mean;
@@ -122,7 +130,7 @@ pub fn stats_sample_skew(data: &[f64]) -> Option<f64> {
 
 // The kurtosis functions return _excess_ kurtosis
 pub fn stats_population_kurtosis(data: &[f64]) -> Option<f64> {
-    if let Some(mean) = stats_mean(data) {
+    if let Ok(mean) = stats_mean(data) {
         let n = data.len() as f64;
 
         let mut sum4 = 0.0;
@@ -139,14 +147,14 @@ pub fn stats_population_kurtosis(data: &[f64]) -> Option<f64> {
     None
 }
 
-pub fn stats_sample_kurtosis(data: &[f64]) -> Option<f64> {
+pub fn stats_sample_kurtosis(data: &[f64]) -> Result<f64, StatsError> {
     if let Some(population_kurtosis) = stats_population_kurtosis(data) {
         let n = data.len() as f64;
         let kurtosis =
             (n - 1.0) / ((n - 2.0) * (n - 3.0)) * ((n + 1.0) * population_kurtosis + 6.0);
-        return Some(kurtosis);
+        return Ok(kurtosis);
     }
-    None
+    Err(StatsError::FourthMomentUndefined)
 }
 
 #[cfg(test)]

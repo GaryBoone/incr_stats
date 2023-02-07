@@ -12,10 +12,10 @@ fn test_update_array10() {
     // Load the first half of the array
     d.update_array(&a[..5]);
     chk!(d.count(), 5);
-    chk!(d.min(), -2.0);
-    chk!(d.max(), 115.0);
-    chk!(d.sum(), 174.0);
-    chk!(d.mean(), 34.8);
+    chk!(d.min(), Ok(-2.0));
+    chk!(d.max(), Ok(115.0));
+    chk!(d.sum(), Ok(174.0));
+    chk!(d.mean(), Ok(34.8));
     chk!(d.population_variance().unwrap(), 1910.56);
     chk!(d.sample_variance().unwrap(), 2388.2);
     chk!(
@@ -31,10 +31,10 @@ fn test_update_array10() {
     // Load rest of array. The results will be cumulative.
     d.update_array(&a[5..]);
     chk!(d.count(), 10);
-    chk!(d.min(), -123.4);
-    chk!(d.max(), 115.0);
-    chk!(d.sum(), 62.83);
-    chk!(d.mean(), 6.283);
+    chk!(d.min(), Ok(-123.4));
+    chk!(d.max(), Ok(115.0));
+    chk!(d.sum(), Ok(62.83));
+    chk!(d.mean(), Ok(6.283));
     chk!(d.population_variance().unwrap(), 3165.19316100);
     chk!(d.sample_variance().unwrap(), 3516.88129);
     chk!(
