@@ -13,7 +13,6 @@ pub struct Stats {
     m4: f64,
 }
 
-// TODO: Add Nan, Inf checks.
 impl Stats {
     pub fn new() -> Self {
         Stats {
@@ -21,7 +20,7 @@ impl Stats {
         }
     }
 
-    // Update the stats with the given value.
+    // Update the moments with the given value.
     pub fn update(&mut self, x: f64) -> Result<()> {
         if f64::is_nan(x) || f64::is_infinite(x) {
             return Err(StatsError::InvalidData);

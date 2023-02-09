@@ -1,6 +1,5 @@
 use crate::error::{Result, StatsError};
 
-// TODO: Add Nan, Inf checks.
 //
 //
 // Batch functions
