@@ -98,7 +98,11 @@ mod tests {
         Checker::assert(1u32, 1u32, line!());
         Checker::assert(0.0, 0.0, line!());
         Checker::assert(1.0, 1.0, line!());
-        Checker::assert(Err(StatsError::NoData), Err(StatsError::NoData), line!());
+        Checker::assert(
+            Err(StatsError::NotEnoughData),
+            Err(StatsError::NotEnoughData),
+            line!(),
+        );
         Checker::assert(Ok(0.0), Ok(0.0), line!());
         Checker::assert(Ok(1.0), Ok(1.0), line!());
     }
@@ -109,7 +113,10 @@ mod tests {
         chk!(1u32, 1u32);
         chk!(0.0, 0.0);
         chk!(1.0, 1.0);
-        chk!(Err(StatsError::NoData), Err(StatsError::NoData));
+        chk!(
+            Err(StatsError::NotEnoughData),
+            Err(StatsError::NotEnoughData)
+        );
         chk!(Ok(0.0), Ok(0.0));
         chk!(Ok(1.0), Ok(1.0));
     }
@@ -129,13 +136,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_check_panic2() {
-        chk!(Ok(0.0), Err(StatsError::NoData));
+        chk!(Ok(0.0), Err(StatsError::NotEnoughData));
     }
 
     #[test]
     #[should_panic]
     fn test_check_panic3() {
-        chk!(Err(StatsError::NoData), Ok(7.0));
+        chk!(Err(StatsError::NotEnoughData), Ok(7.0));
     }
 
     #[test]

@@ -1,4 +1,4 @@
-use crate::error::StatsError;
+use crate::error::{Result, StatsError};
 
 //
 //
@@ -7,154 +7,151 @@ use crate::error::StatsError;
 // These are non-incremental functions that operate only on the data given them.
 // They're prefixed with 'Stats'.
 //
+// TODO: Change stats_* to Stats::*
 pub fn stats_count(data: &[f64]) -> u32 {
     data.len() as u32
 }
 
-pub fn stats_min(data: &[f64]) -> Result<f64, StatsError> {
+pub fn stats_min(data: &[f64]) -> Result<f64> {
     if data.len() == 0 {
-        return Err(StatsError::NoData);
+        return Err(StatsError::NotEnoughData);
     }
-    let mut min = data[0];
-    for v in data {
-        if v < &min {
-            min = *v;
-        }
-    }
-    Ok(min)
+    Ok(data.iter().fold(f64::INFINITY, |a, &b| a.min(b)))
 }
 
-pub fn stats_max(data: &[f64]) -> Result<f64, StatsError> {
+pub fn stats_max(data: &[f64]) -> Result<f64> {
     if data.len() == 0 {
-        return Err(StatsError::NoData);
+        return Err(StatsError::NotEnoughData);
     }
-    let mut max = data[0];
-    for v in data {
-        if v > &max {
-            max = *v;
-        }
-    }
-    Ok(max)
+    Ok(data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)))
 }
 
-pub fn stats_sum(data: &[f64]) -> Result<f64, StatsError> {
+pub fn stats_sum(data: &[f64]) -> Result<f64> {
     if data.len() == 0 {
-        return Err(StatsError::NoData);
+        return Err(StatsError::NotEnoughData);
     }
-    let mut sum = 0.0;
-    for v in data {
-        sum += *v;
-    }
-    Ok(sum)
+    Ok(data.iter().fold(0.0, |sum, v| sum + v))
 }
 
-pub fn stats_mean(data: &[f64]) -> Result<f64, StatsError> {
-    let n = data.len();
-    if n == 0 {
-        return Err(StatsError::NoData);
+pub fn stats_mean(data: &[f64]) -> Result<f64> {
+    if data.len() == 0 {
+        return Err(StatsError::NotEnoughData);
     }
-    Ok(stats_sum(data)? / (n as f64))
+    Ok(stats_sum(data)? / (data.len() as f64))
 }
 
-fn sum_squared_deltas(data: &[f64]) -> Option<f64> {
-    if let Ok(mean) = stats_mean(data) {
-        let mut ssd = 0.0;
-        for v in data {
-            let delta = v - mean;
-            ssd += delta * delta;
-        }
-        return Some(ssd);
-    }
-    None
+fn sum_squared_deltas(data: &[f64]) -> Result<f64> {
+    let mean = stats_mean(data)?;
+    let mut ssd = 0.0;
+    data.iter().for_each(|v| {
+        let delta = v - mean;
+        ssd += delta * delta;
+    });
+    Ok(ssd)
 }
 
-pub fn stats_population_variance(data: &[f64]) -> Option<f64> {
-    if let Some(ssd) = sum_squared_deltas(data) {
-        let n = data.len() as f64;
-        return Some(ssd / n);
+// population_variance:
+// R: var.pop=function(x){(length(x)-1)/length(x)*var(x)}
+// Oct: var(a, 1)
+pub fn stats_population_variance(data: &[f64]) -> Result<f64> {
+    // TODO: Check if necessary.
+    if data.len() <= 1 {
+        return Err(StatsError::NotEnoughData);
     }
-    None
+    Ok(sum_squared_deltas(data)? / (data.len() as f64))
 }
 
-pub fn stats_sample_variance(data: &[f64]) -> Option<f64> {
-    if data.len() < 2 {
-        return None;
+// sample_variance:
+// R: var(a)
+// Oct: var(a)
+pub fn stats_sample_variance(data: &[f64]) -> Result<f64> {
+    if data.len() <= 1 {
+        return Err(StatsError::NotEnoughData);
     }
-    if let Some(ssd) = sum_squared_deltas(data) {
-        let nm1 = (data.len() - 1) as f64;
-        return Some(ssd / nm1);
-    }
-    None
+    Ok(sum_squared_deltas(data)? / ((data.len() - 1) as f64))
 }
 
-pub fn stats_population_standard_deviation(data: &[f64]) -> Option<f64> {
-    if let Some(spv) = stats_population_variance(data) {
-        return Some(f64::sqrt(spv));
-    }
-    None
+// population_standard_deviation:
+// R: sd.pop=function(x){sd(x)*sqrt((length(x)-1)/length(x))}
+// Oct: std(a, 1)
+pub fn stats_population_standard_deviation(data: &[f64]) -> Result<f64> {
+    Ok(f64::sqrt(stats_population_variance(data)?))
 }
 
-pub fn stats_sample_standard_deviation(data: &[f64]) -> Option<f64> {
-    if let Some(ssv) = stats_sample_variance(data) {
-        return Some(f64::sqrt(ssv));
-    }
-    None
+// sample_standard_deviation:
+// R: sd(a)
+// Oct: std(a)
+pub fn stats_sample_standard_deviation(data: &[f64]) -> Result<f64> {
+    Ok(f64::sqrt(stats_sample_variance(data)?))
 }
 
-pub fn stats_population_skew(data: &[f64]) -> Option<f64> {
-    if let Ok(mean) = stats_mean(data) {
-        let mut sum3 = 0.0;
-        for v in data {
-            let delta = v - mean;
-            sum3 += delta * delta * delta;
-        }
-
-        if let Some(ssv) = stats_population_variance(data) {
-            let n = data.len() as f64;
-            let variance = f64::sqrt(ssv);
-            let skew = sum3 / n / (variance * variance * variance);
-            return Some(skew);
-        }
+// population_skew:
+// R: skewness(a)
+// Oct: skewness(a)
+pub fn stats_population_skew(data: &[f64]) -> Result<f64> {
+    if data.len() <= 1 {
+        return Err(StatsError::NotEnoughData);
     }
-    None
+    let mean = stats_mean(data)?;
+    let sum3 = data.iter().fold(0.0, |sum, v| {
+        let delta = v - mean;
+        sum + delta * delta * delta
+    });
+
+    let ssv = stats_population_variance(data)?;
+    let n = data.len() as f64;
+    let variance = f64::sqrt(ssv);
+    if variance == 0.0 {
+        return Err(StatsError::Undefined);
+    }
+    Ok(sum3 / n / (variance * variance * variance))
 }
 
-pub fn stats_sample_skew(data: &[f64]) -> Option<f64> {
-    if let Some(pop_skew) = stats_population_skew(data) {
-        let n = data.len() as f64;
-        let skew = f64::sqrt(n * (n - 1.0)) / (n - 2.0) * pop_skew;
-        return Some(skew);
+// sample_skew:
+// R: Skew(a, method=2) => -0.5656994001961358 (G_1 = g_1 * sqrt(n(n-1)) / (n-2))
+// Oct: skewness(a10, 0)
+pub fn stats_sample_skew(data: &[f64]) -> Result<f64> {
+    if data.len() <= 2 {
+        return Err(StatsError::NotEnoughData);
     }
-    None
+    let pop_skew = stats_population_skew(data)?;
+    let n = data.len() as f64;
+    let skew = f64::sqrt(n * (n - 1.0)) / (n - 2.0) * pop_skew;
+    Ok(skew)
 }
 
 // The kurtosis functions return _excess_ kurtosis
-pub fn stats_population_kurtosis(data: &[f64]) -> Option<f64> {
-    if let Ok(mean) = stats_mean(data) {
-        let n = data.len() as f64;
-
-        let mut sum4 = 0.0;
-        for v in data {
-            let delta = v - mean;
-            sum4 += delta * delta * delta * delta;
-        }
-
-        if let Some(variance) = stats_population_variance(data) {
-            let kurtosis = sum4 / (variance * variance) / n - 3.0;
-            return Some(kurtosis);
-        }
+// population_kurtosis:
+// R: kurtosis(a)-3.0 (ie excess kurtosis), or Kurt(a10, method = 1)
+// Oct: kurtosis(a)-3.0
+pub fn stats_population_kurtosis(data: &[f64]) -> Result<f64> {
+    if data.len() <= 1 {
+        return Err(StatsError::NotEnoughData);
     }
-    None
+    let mean = stats_mean(data)?;
+    let n = data.len() as f64;
+
+    let sum4 = data.iter().fold(0.0, |sum4, v| {
+        let delta = v - mean;
+        sum4 + delta * delta * delta * delta
+    });
+    let variance = stats_population_variance(data)?;
+    if variance == 0.0 {
+        return Err(StatsError::Undefined);
+    }
+    let kurtosis = sum4 / (variance * variance) / n - 3.0;
+    Ok(kurtosis)
 }
 
-pub fn stats_sample_kurtosis(data: &[f64]) -> Result<f64, StatsError> {
-    if let Some(population_kurtosis) = stats_population_kurtosis(data) {
-        let n = data.len() as f64;
-        let kurtosis =
-            (n - 1.0) / ((n - 2.0) * (n - 3.0)) * ((n + 1.0) * population_kurtosis + 6.0);
-        return Ok(kurtosis);
+// sample_kurtosis:
+// R: Kurt(a, method = 2)
+// Oct: kurtosis(a, 0)-3.0
+pub fn stats_sample_kurtosis(data: &[f64]) -> Result<f64> {
+    if data.len() <= 3 {
+        return Err(StatsError::NotEnoughData);
     }
-    Err(StatsError::FourthMomentUndefined)
+    let n = data.len() as f64;
+    Ok((n - 1.0) / ((n - 2.0) * (n - 3.0)) * ((n + 1.0) * stats_population_kurtosis(data)? + 6.0))
 }
 
 #[cfg(test)]
@@ -167,17 +164,17 @@ mod tests {
 
     #[test]
     fn test_sum_squared_deltas() {
-        assert_eq!(sum_squared_deltas(&vec![]), None);
-        assert_eq!(sum_squared_deltas(&vec![0.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![1.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![2.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![-1.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![0.0, 0.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![1.0, 1.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![2.0, 2.0]), Some(0.0));
-        assert_eq!(sum_squared_deltas(&vec![0.0, 1.0]), Some(0.5));
-        assert_eq!(sum_squared_deltas(&vec![1.0, 2.0]), Some(0.5));
-        assert_eq!(sum_squared_deltas(&vec![-1.0, 0.0]), Some(0.5));
-        assert_eq!(sum_squared_deltas(&vec![-1.0, 0.0, 1.0]), Some(2.0));
+        assert_eq!(sum_squared_deltas(&vec![]), Err(StatsError::NotEnoughData));
+        assert_eq!(sum_squared_deltas(&vec![0.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![1.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![2.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![-1.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![0.0, 0.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![1.0, 1.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![2.0, 2.0]), Ok(0.0));
+        assert_eq!(sum_squared_deltas(&vec![0.0, 1.0]), Ok(0.5));
+        assert_eq!(sum_squared_deltas(&vec![1.0, 2.0]), Ok(0.5));
+        assert_eq!(sum_squared_deltas(&vec![-1.0, 0.0]), Ok(0.5));
+        assert_eq!(sum_squared_deltas(&vec![-1.0, 0.0, 1.0]), Ok(2.0));
     }
 }

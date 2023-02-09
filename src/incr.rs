@@ -1,4 +1,4 @@
-use crate::error::StatsError;
+use crate::error::{Result, StatsError};
 
 #[derive(Default)]
 pub struct Stats {
@@ -29,7 +29,7 @@ impl Stats {
             self.max = x
         }
         self.sum += x;
-        let n_minus_1 = self.n;
+        let n_minus_1 = self.n; // Prior n before increment.
         self.n_int += 1;
         self.n += 1.0;
         let delta = x - self.mean;
@@ -48,30 +48,30 @@ impl Stats {
         self.n_int
     }
 
-    pub fn min(&self) -> Result<f64, StatsError> {
+    pub fn min(&self) -> Result<f64> {
         if self.n_int == 0 {
-            return Err(StatsError::NoData);
+            return Err(StatsError::NotEnoughData);
         }
         Ok(self.min)
     }
 
-    pub fn max(&self) -> Result<f64, StatsError> {
+    pub fn max(&self) -> Result<f64> {
         if self.n_int == 0 {
-            return Err(StatsError::NoData);
+            return Err(StatsError::NotEnoughData);
         }
         Ok(self.max)
     }
 
-    pub fn sum(&self) -> Result<f64, StatsError> {
+    pub fn sum(&self) -> Result<f64> {
         if self.n_int == 0 {
-            return Err(StatsError::NoData);
+            return Err(StatsError::NotEnoughData);
         }
         Ok(self.sum)
     }
 
-    pub fn mean(&self) -> Result<f64, StatsError> {
+    pub fn mean(&self) -> Result<f64> {
         if self.n_int == 0 {
-            return Err(StatsError::NoData);
+            return Err(StatsError::NotEnoughData);
         }
         Ok(self.mean)
     }
@@ -85,83 +85,70 @@ impl Stats {
         }
     }
 
-    pub fn population_variance(&self) -> Result<f64, StatsError> {
-        if self.n_int == 0 {
-            return Err(StatsError::NoData);
-        }
-        if self.n_int == 1 {
-            return Err(StatsError::SecondMomentUndefined);
+    pub fn population_variance(&self) -> Result<f64> {
+        if self.n_int == 0 || self.n_int == 1 {
+            return Err(StatsError::NotEnoughData);
         }
         Ok(self.m2 / self.n)
     }
 
-    pub fn sample_variance(&self) -> Option<f64> {
+    pub fn sample_variance(&self) -> Result<f64> {
         if self.n_int == 0 || self.n_int == 1 {
-            return None;
+            return Err(StatsError::NotEnoughData);
         }
-        Some(self.m2 / (self.n - 1.0))
+        Ok(self.m2 / (self.n - 1.0))
     }
 
-    pub fn population_standard_deviation(&self) -> Result<f64, StatsError> {
+    pub fn population_standard_deviation(&self) -> Result<f64> {
         if self.n_int == 0 || self.n_int == 1 {
-            return Err(StatsError::SecondMomentUndefined);
+            return Err(StatsError::NotEnoughData);
         }
         Ok(f64::sqrt(self.population_variance()?))
     }
 
-    pub fn sample_standard_deviation(&self) -> Option<f64> {
-        if self.n_int == 0 || self.n_int == 1 {
-            return None;
+    pub fn sample_standard_deviation(&self) -> Result<f64> {
+        if self.n_int <= 1 {
+            return Err(StatsError::NotEnoughData);
         }
-        match self.sample_variance() {
-            None => None,
-            Some(sv) => Some(f64::sqrt(sv)),
-        }
+        Ok(f64::sqrt(self.sample_variance()?))
     }
 
-    pub fn population_skew(&self) -> Option<f64> {
-        let k = f64::sqrt(self.n / (self.m2 * self.m2 * self.m2)) * self.m3;
-        if k.is_nan() {
-            None
-        } else {
-            Some(k)
+    pub fn population_skew(&self) -> Result<f64> {
+        if self.n_int <= 1 {
+            return Err(StatsError::NotEnoughData);
         }
+        if self.m2 == 0.0 {
+            return Err(StatsError::Undefined);
+        }
+        Ok(f64::sqrt(self.n / (self.m2 * self.m2 * self.m2)) * self.m3)
     }
 
-    pub fn sample_skew(&self) -> Option<f64> {
-        if self.n_int == 2 {
-            return None;
+    pub fn sample_skew(&self) -> Result<f64> {
+        if self.n_int <= 2 {
+            return Err(StatsError::NotEnoughData);
         }
-        match self.population_skew() {
-            None => None,
-            Some(s) => Some(f64::sqrt(self.n * (self.n - 1.0)) / (self.n - 2.0) * s),
-        }
+        Ok(f64::sqrt(self.n * (self.n - 1.0)) / (self.n - 2.0) * self.population_skew()?)
     }
 
     // The kurtosis functions return _excess_ kurtosis, so that the kurtosis of a normal
     // distribution = 0.0. Then kurtosis < 0.0 indicates platykurtic (flat) while
-    // kurtosis > 0.0 indicates leptokurtic (peaked) and near 0 indicates mesokurtic.Update
-    pub fn population_kurtosis(&self) -> Option<f64> {
-        let k = (self.n * self.m4) / (self.m2 * self.m2) - 3.0;
-        if k.is_nan() {
-            None
-        } else {
-            Some(k)
+    // kurtosis > 0.0 indicates leptokurtic (peaked) and near 0 indicates mesokurtic.
+    pub fn population_kurtosis(&self) -> Result<f64> {
+        if self.n_int <= 1 {
+            return Err(StatsError::NotEnoughData);
         }
+        if self.m2 == 0.0 {
+            return Err(StatsError::Undefined);
+        }
+        let k = (self.n * self.m4) / (self.m2 * self.m2) - 3.0;
+        Ok(k)
     }
 
-    pub fn sample_kurtosis(&self) -> Result<f64, StatsError> {
-        if self.n_int == 2 {
-            return Err(StatsError::SecondMomentUndefined);
+    pub fn sample_kurtosis(&self) -> Result<f64> {
+        if self.n_int <= 3 {
+            return Err(StatsError::NotEnoughData);
         }
-        if self.n_int == 3 {
-            return Err(StatsError::ThirdMomentUndefined);
-        }
-        match self.population_kurtosis() {
-            None => Err(StatsError::FourthMomentUndefined),
-            Some(k) => {
-                Ok((self.n - 1.0) / ((self.n - 2.0) * (self.n - 3.0)) * ((self.n + 1.0) * k + 6.0))
-            }
-        }
+        let k = self.population_kurtosis()?;
+        Ok((self.n - 1.0) / ((self.n - 2.0) * (self.n - 3.0)) * ((self.n + 1.0) * k + 6.0))
     }
 }

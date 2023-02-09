@@ -1,105 +1,315 @@
 use crate::batch::*;
 use crate::chk;
-use crate::error::StatsError;
+use crate::error::StatsError::{NotEnoughData, Undefined};
 
 // Test the batch functions. Calculate the descriptive stats on the whole array.
+static ZEROS: [f64; 10] = [0.0; 10];
+static ONES: [f64; 10] = [1.0; 10];
+static ASCENDING: [f64; 5] = [1.0, 2.0, 3.0, 4.0, 5.0];
 
 #[test]
 fn test_batch_stats_empty() {
     let a = vec![];
     chk!(stats_count(&a), 0u32);
-    chk!(stats_min(&a), Err(StatsError::NoData));
-    chk!(stats_max(&a), Err(StatsError::NoData));
-    chk!(stats_sum(&a), Err(StatsError::NoData));
-    chk!(stats_mean(&a), Err(StatsError::NoData));
-    chk!(stats_population_variance(&a), None);
-    chk!(stats_sample_variance(&a), None);
-    chk!(stats_population_standard_deviation(&a), None);
-    chk!(stats_sample_standard_deviation(&a), None);
-    chk!(stats_population_skew(&a), None);
-    chk!(stats_sample_skew(&a), None);
-    chk!(stats_population_kurtosis(&a), None);
-    chk!(
-        stats_sample_kurtosis(&a),
-        Err(StatsError::FourthMomentUndefined)
-    );
+    // Not enough data to define anything.
+    chk!(stats_min(&a), Err(NotEnoughData));
+    chk!(stats_max(&a), Err(NotEnoughData));
+    chk!(stats_sum(&a), Err(NotEnoughData));
+    chk!(stats_mean(&a), Err(NotEnoughData));
+    chk!(stats_population_variance(&a), Err(NotEnoughData));
+    chk!(stats_sample_variance(&a), Err(NotEnoughData));
+    chk!(stats_population_standard_deviation(&a), Err(NotEnoughData));
+    chk!(stats_sample_standard_deviation(&a), Err(NotEnoughData));
+    chk!(stats_population_skew(&a), Err(NotEnoughData));
+    chk!(stats_sample_skew(&a), Err(NotEnoughData));
+    chk!(stats_population_kurtosis(&a), Err(NotEnoughData));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
 }
 
 #[test]
-fn test_batch_stats0() {
-    let a = vec![0.0];
+fn test_batch_stats_1_zero() {
+    let a = &ZEROS[..1];
     chk!(stats_count(&a), 1u32);
+    // With one value, the first moment (mean) is available.
     chk!(stats_min(&a), Ok(0.0));
     chk!(stats_max(&a), Ok(0.0));
     chk!(stats_sum(&a), Ok(0.0));
     chk!(stats_mean(&a), Ok(0.0));
-    chk!(stats_population_variance(&a), Some(0.0));
-    chk!(stats_sample_variance(&a), None);
-    // chk!(stats_population_standard_deviation(&a), None);
-    chk!(stats_sample_standard_deviation(&a), None);
-    // chk!(stats_population_skew(&a), None);
-    // chk!(stats_sample_skew(&a), None);
-    // chk!(stats_population_kurtosis(&a), None);
-    // chk!(stats_sample_kurtosis(&a), None);
-}
-
-fn test_batch_stats1() {
-    chk!(stats_min(&vec![2.0]), Ok(2.0));
-    // TODO: Add rest.
-}
-
-fn test_batch_stats2() {
-    chk!(stats_min(&vec![-1.2, 2.0]), Ok(-1.2));
-    // TODO: Add rest.
+    chk!(stats_population_variance(&a), Err(NotEnoughData));
+    chk!(stats_sample_variance(&a), Err(NotEnoughData));
+    chk!(stats_population_standard_deviation(&a), Err(NotEnoughData));
+    chk!(stats_sample_standard_deviation(&a), Err(NotEnoughData));
+    chk!(stats_population_skew(&a), Err(NotEnoughData));
+    chk!(stats_sample_skew(&a), Err(NotEnoughData));
+    chk!(stats_population_kurtosis(&a), Err(NotEnoughData));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
 }
 
 #[test]
-fn test_batch_stats5() {
-    let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    chk!(stats_count(&a), 5);
-    chk!(stats_min(&a).unwrap(), 1.0);
-    chk!(stats_max(&a).unwrap(), 5.0);
-    chk!(stats_sum(&a).unwrap(), 15.0);
-    chk!(stats_mean(&a).unwrap(), 3.0);
-    chk!(stats_population_variance(&a).unwrap(), 2.0);
-    chk!(stats_sample_variance(&a).unwrap(), 2.5);
-    chk!(
-        stats_population_standard_deviation(&a).unwrap(),
-        1.414213562373095
-    );
-    chk!(
-        stats_sample_standard_deviation(&a).unwrap(),
-        1.5811388300841898
-    );
-    chk!(stats_population_skew(&a).unwrap(), 0.0);
-    chk!(stats_sample_skew(&a).unwrap(), 0.0);
-    chk!(stats_population_kurtosis(&a).unwrap(), -1.3);
-    chk!(stats_sample_kurtosis(&a).unwrap(), -1.2);
+fn test_batch_stats_2_zeros() {
+    let a = &ZEROS[..2];
+    chk!(stats_count(&a), 2u32);
+    chk!(stats_min(&a), Ok(0.0));
+    chk!(stats_max(&a), Ok(0.0));
+    chk!(stats_sum(&a), Ok(0.0));
+    chk!(stats_mean(&a), Ok(0.0));
+    // With two values, the second moment (variance) is available.
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(NotEnoughData));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
 }
 
 #[test]
-fn test_batch_stats10() {
+fn test_batch_stats_3_zeros() {
+    let a = &ZEROS[..3];
+    chk!(stats_count(&a), 3u32);
+    chk!(stats_min(&a), Ok(0.0));
+    chk!(stats_max(&a), Ok(0.0));
+    chk!(stats_sum(&a), Ok(0.0));
+    chk!(stats_mean(&a), Ok(0.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    // With three values, the third moment (skew) is available, but because it's all zeros, they're
+    // undefined.
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(Undefined));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
+}
+#[test]
+fn test_batch_stats_4_zeros() {
+    let a = &ZEROS[..4];
+    chk!(stats_count(&a), 4u32);
+    chk!(stats_min(&a), Ok(0.0));
+    chk!(stats_max(&a), Ok(0.0));
+    chk!(stats_sum(&a), Ok(0.0));
+    chk!(stats_mean(&a), Ok(0.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    // With four values, the fourth moment (kurtosis) is available, but because it's all zeros,
+    // they're undefined.
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(Undefined));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(Undefined));
+}
+#[test]
+fn test_batch_stats_5_zeros() {
+    let a = &ZEROS[..5];
+    chk!(stats_count(&a), 5u32);
+    chk!(stats_min(&a), Ok(0.0));
+    chk!(stats_max(&a), Ok(0.0));
+    chk!(stats_sum(&a), Ok(0.0));
+    chk!(stats_mean(&a), Ok(0.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(Undefined));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(Undefined));
+}
+
+#[test]
+fn test_batch_stats_1_one() {
+    let a = &ONES[..1];
+    chk!(stats_count(&a), 1u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(1.0));
+    chk!(stats_sum(&a), Ok(1.0));
+    chk!(stats_mean(&a), Ok(1.0));
+    chk!(stats_population_variance(&a), Err(NotEnoughData));
+    chk!(stats_sample_variance(&a), Err(NotEnoughData));
+    chk!(stats_population_standard_deviation(&a), Err(NotEnoughData));
+    chk!(stats_sample_standard_deviation(&a), Err(NotEnoughData));
+    chk!(stats_population_skew(&a), Err(NotEnoughData));
+    chk!(stats_sample_skew(&a), Err(NotEnoughData));
+    chk!(stats_population_kurtosis(&a), Err(NotEnoughData));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
+}
+
+#[test]
+fn test_batch_stats_2_ones() {
+    let a = &ONES[..2];
+    chk!(stats_count(&a), 2u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(1.0));
+    chk!(stats_sum(&a), Ok(2.0));
+    chk!(stats_mean(&a), Ok(1.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(NotEnoughData));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
+}
+
+#[test]
+fn test_batch_stats_3_ones() {
+    let a = &ONES[..3];
+    chk!(stats_count(&a), 3u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(1.0));
+    chk!(stats_sum(&a), Ok(3.0));
+    chk!(stats_mean(&a), Ok(1.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    // With three values, the third moment (skew) is available, but because it's all ones, the
+    // variance is 0.0, so they're undefined.
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(Undefined));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
+}
+#[test]
+fn test_batch_stats_4_ones() {
+    let a = &ONES[..4];
+    chk!(stats_count(&a), 4u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(1.0));
+    chk!(stats_sum(&a), Ok(4.0));
+    chk!(stats_mean(&a), Ok(1.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(Undefined));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(Undefined));
+}
+#[test]
+fn test_batch_stats_5_ones() {
+    let a = &ONES[..5];
+    chk!(stats_count(&a), 5u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(1.0));
+    chk!(stats_sum(&a), Ok(5.0));
+    chk!(stats_mean(&a), Ok(1.0));
+    chk!(stats_population_variance(&a), Ok(0.0));
+    chk!(stats_sample_variance(&a), Ok(0.0));
+    chk!(stats_population_standard_deviation(&a), Ok(0.0));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.0));
+    chk!(stats_population_skew(&a), Err(Undefined));
+    chk!(stats_sample_skew(&a), Err(Undefined));
+    chk!(stats_population_kurtosis(&a), Err(Undefined));
+    chk!(stats_sample_kurtosis(&a), Err(Undefined));
+}
+#[test]
+fn test_batch_stats_2_ascending() {
+    let a = &ASCENDING[..2];
+    chk!(stats_count(&a), 2u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(2.0));
+    chk!(stats_sum(&a), Ok(3.0));
+    chk!(stats_mean(&a), Ok(1.5));
+    chk!(stats_population_variance(&a), Ok(0.25));
+    chk!(stats_sample_variance(&a), Ok(0.5));
+    chk!(stats_population_standard_deviation(&a), Ok(0.5));
+    chk!(stats_sample_standard_deviation(&a), Ok(0.7071067811865476));
+    chk!(stats_population_skew(&a), Ok(0.0));
+    chk!(stats_sample_skew(&a), Err(NotEnoughData));
+    chk!(stats_population_kurtosis(&a), Ok(-2.0));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
+}
+
+#[test]
+fn test_batch_stats_3_ascending() {
+    let a = &ASCENDING[..3];
+    chk!(stats_count(&a), 3u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(3.0));
+    chk!(stats_sum(&a), Ok(6.0));
+    chk!(stats_mean(&a), Ok(2.0));
+    chk!(stats_population_variance(&a), Ok(0.6666666666666666));
+    chk!(stats_sample_variance(&a), Ok(1.0));
+    chk!(
+        stats_population_standard_deviation(&a),
+        Ok(0.816496580927726)
+    );
+    chk!(stats_sample_standard_deviation(&a), Ok(1.0));
+    // With three values, the third moment (skew) is available, but because the data is linear,
+    // the skew is 0.0.
+    chk!(stats_population_skew(&a), Ok(0.0));
+    chk!(stats_sample_skew(&a), Ok(0.0));
+    chk!(stats_population_kurtosis(&a), Ok(-1.5));
+    chk!(stats_sample_kurtosis(&a), Err(NotEnoughData));
+}
+#[test]
+fn test_batch_stats_4_ascending() {
+    let a = &ASCENDING[..4];
+    chk!(stats_count(&a), 4u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(4.0));
+    chk!(stats_sum(&a), Ok(10.0));
+    chk!(stats_mean(&a), Ok(2.5));
+    chk!(stats_population_variance(&a), Ok(1.25));
+    chk!(stats_sample_variance(&a), Ok(1.6666666666666667));
+    chk!(
+        stats_population_standard_deviation(&a),
+        Ok(1.118033988749895)
+    );
+    chk!(stats_sample_standard_deviation(&a), Ok(1.2909944487358056));
+    chk!(stats_population_skew(&a), Ok(0.0));
+    chk!(stats_sample_skew(&a), Ok(0.0));
+    chk!(stats_population_kurtosis(&a), Ok(-1.36));
+    chk!(stats_sample_kurtosis(&a), Ok(-1.2));
+}
+#[test]
+fn test_batch_stats_5_ascending() {
+    let a = &ASCENDING[..5];
+    chk!(stats_count(&a), 5u32);
+    chk!(stats_min(&a), Ok(1.0));
+    chk!(stats_max(&a), Ok(5.0));
+    chk!(stats_sum(&a), Ok(15.0));
+    chk!(stats_mean(&a), Ok(3.0));
+    chk!(stats_population_variance(&a), Ok(2.0));
+    chk!(stats_sample_variance(&a), Ok(2.5));
+    chk!(
+        stats_population_standard_deviation(&a),
+        Ok(1.4142135623730951)
+    );
+    chk!(stats_sample_standard_deviation(&a), Ok(1.5811388300841898));
+    chk!(stats_population_skew(&a), Ok(0.0));
+    chk!(stats_sample_skew(&a), Ok(0.0));
+    chk!(stats_population_kurtosis(&a), Ok(-1.3));
+    chk!(stats_sample_kurtosis(&a), Ok(-1.2));
+}
+
+#[test]
+fn test_batch_stats_ten_values() {
     // This array is in both the incremental and batch tests.
     let a = vec![
         1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3,
     ];
     chk!(stats_count(&a), 10);
-    chk!(stats_min(&a).unwrap(), -123.4);
-    chk!(stats_max(&a).unwrap(), 115.0);
-    chk!(stats_sum(&a).unwrap(), 62.83);
-    chk!(stats_mean(&a).unwrap(), 6.283);
-    chk!(stats_population_variance(&a).unwrap(), 3165.19316100);
-    chk!(stats_sample_variance(&a).unwrap(), 3516.88129);
+    chk!(stats_min(&a), Ok(-123.4));
+    chk!(stats_max(&a), Ok(115.0));
+    chk!(stats_sum(&a), Ok(62.83));
+    chk!(stats_mean(&a), Ok(6.283));
+    chk!(stats_population_variance(&a), Ok(3165.193161));
+    chk!(stats_sample_variance(&a), Ok(3516.88129));
     chk!(
-        stats_population_standard_deviation(&a).unwrap(),
-        56.26004942230321
+        stats_population_standard_deviation(&a),
+        Ok(56.26004942230321)
     );
-    chk!(
-        stats_sample_standard_deviation(&a).unwrap(),
-        59.3032991493728
-    );
-    chk!(stats_population_skew(&a).unwrap(), -0.4770396201629045);
-    chk!(stats_sample_skew(&a).unwrap(), -0.565699400196136);
-    chk!(stats_population_kurtosis(&a).unwrap(), 1.253240236214162);
-    chk!(stats_sample_kurtosis(&a).unwrap(), 3.179835417592894);
+    chk!(stats_sample_standard_deviation(&a), Ok(59.3032991493728));
+    chk!(stats_population_skew(&a), Ok(-0.4770396201629045));
+    chk!(stats_sample_skew(&a), Ok(-0.565699400196136));
+    chk!(stats_population_kurtosis(&a), Ok(1.253240236214162));
+    chk!(stats_sample_kurtosis(&a), Ok(3.179835417592894));
 }
