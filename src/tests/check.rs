@@ -65,19 +65,6 @@ impl Checker<Result<f64, StatsError>> for Result<f64, StatsError> {
     }
 }
 
-// TODO: Remove after conversion to StatsError.
-impl Checker<Option<f64>> for Option<f64> {
-    fn assert(self, exp: Option<f64>, line: u32) {
-        match (self, exp) {
-            (None, None) => {}
-            (Some(a), Some(e)) => Checker::assert(a, e, line),
-            _ => {
-                panic_with_types(self, exp, line);
-            }
-        }
-    }
-}
-
 // Define a macro and export it for use as the main testing function. Using a macro provides 1) a
 // short name instead of `Checker::assert` and 2), the line number is defined at the call site, so
 // is correct.

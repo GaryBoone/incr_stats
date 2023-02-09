@@ -10,7 +10,7 @@ fn test_update_array10() {
         1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3,
     ];
     // Load the first half of the array
-    d.update_array(&a[..5]);
+    d.update_array(&a[..5]).unwrap();
     chk!(d.count(), 5);
     chk!(d.min(), Ok(-2.0));
     chk!(d.max(), Ok(115.0));
@@ -26,7 +26,7 @@ fn test_update_array10() {
     chk!(d.sample_kurtosis(), Ok(1.809390299839858));
 
     // Load rest of array. The results will be cumulative.
-    d.update_array(&a[5..]);
+    d.update_array(&a[5..]).unwrap();
     chk!(d.count(), 10);
     chk!(d.min(), Ok(-123.4));
     chk!(d.max(), Ok(115.0));

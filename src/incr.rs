@@ -13,6 +13,7 @@ pub struct Stats {
     m4: f64,
 }
 
+// TODO: Add Nan, Inf checks.
 impl Stats {
     pub fn new() -> Self {
         Stats {
@@ -21,7 +22,10 @@ impl Stats {
     }
 
     // Update the stats with the given value.
-    pub fn update(&mut self, x: f64) {
+    pub fn update(&mut self, x: f64) -> Result<()> {
+        if f64::is_nan(x) || f64::is_infinite(x) {
+            return Err(StatsError::InvalidData);
+        }
         if self.n_int == 0 || x < self.min {
             self.min = x
         }
@@ -42,6 +46,7 @@ impl Stats {
             - 4.0 * delta_n * self.m3;
         self.m3 += term1 * delta_n * (self.n - 2.0) - 3.0 * delta_n * self.m2;
         self.m2 += term1;
+        Ok(())
     }
 
     pub fn count(&self) -> u32 {
@@ -79,10 +84,11 @@ impl Stats {
     // Update the stats with the given array of values using incremental updates for each value. If
     // all of the data is contained in a single array, the batch functions below would be faster.
     // However, this function allows incremental updates with more than one value at a time.
-    pub fn update_array(&mut self, data: &[f64]) {
+    pub fn update_array(&mut self, data: &[f64]) -> Result<()> {
         for v in data {
-            self.update(*v);
+            self.update(*v)?;
         }
+        Ok(())
     }
 
     pub fn population_variance(&self) -> Result<f64> {

@@ -1,5 +1,5 @@
 use crate::chk;
-use crate::error::StatsError::{NotEnoughData, Undefined};
+use crate::error::StatsError::{InvalidData, NotEnoughData, Undefined};
 use crate::incr::Stats;
 
 // Test the incremtal functions. Update the descriptive stats one point at a time.
@@ -9,6 +9,14 @@ static ASCENDING: [f64; 5] = [1.0, 2.0, 3.0, 4.0, 5.0];
 static VALUES: [f64; 10] = [
     1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3,
 ];
+
+#[test]
+fn test_update_with_bad_data() {
+    let mut d = Stats::new();
+    assert_eq!(d.update(f64::NAN), Err(InvalidData));
+    assert_eq!(d.update(f64::INFINITY), Err(InvalidData));
+    assert_eq!(d.update(f64::NEG_INFINITY), Err(InvalidData));
+}
 
 #[test]
 fn test_update_empty() {
@@ -32,7 +40,7 @@ fn test_update_empty() {
 #[test]
 fn test_batch_stats_1_zero() {
     let mut d = Stats::new();
-    ZEROS[..1].iter().for_each(|v| d.update(*v));
+    ZEROS[..1].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 1u32);
     // With one value, the first moment (mean) is available.
@@ -53,7 +61,7 @@ fn test_batch_stats_1_zero() {
 #[test]
 fn test_batch_stats_2_zeros() {
     let mut d = Stats::new();
-    ZEROS[..2].iter().for_each(|v| d.update(*v));
+    ZEROS[..2].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 2u32);
     chk!(d.min(), Ok(0.0));
@@ -74,7 +82,7 @@ fn test_batch_stats_2_zeros() {
 #[test]
 fn test_batch_stats_3_zeros() {
     let mut d = Stats::new();
-    ZEROS[..3].iter().for_each(|v| d.update(*v));
+    ZEROS[..3].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 3u32);
     chk!(d.min(), Ok(0.0));
@@ -95,7 +103,7 @@ fn test_batch_stats_3_zeros() {
 #[test]
 fn test_batch_stats_4_zeros() {
     let mut d = Stats::new();
-    ZEROS[..4].iter().for_each(|v| d.update(*v));
+    ZEROS[..4].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 4u32);
     chk!(d.min(), Ok(0.0));
@@ -116,7 +124,7 @@ fn test_batch_stats_4_zeros() {
 #[test]
 fn test_batch_stats_5_zeros() {
     let mut d = Stats::new();
-    ZEROS[..5].iter().for_each(|v| d.update(*v));
+    ZEROS[..5].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(0.0));
@@ -136,7 +144,7 @@ fn test_batch_stats_5_zeros() {
 #[test]
 fn test_batch_stats_1_one() {
     let mut d = Stats::new();
-    ONES[..1].iter().for_each(|v| d.update(*v));
+    ONES[..1].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 1u32);
     chk!(d.min(), Ok(1.0));
@@ -156,7 +164,7 @@ fn test_batch_stats_1_one() {
 #[test]
 fn test_batch_stats_2_ones() {
     let mut d = Stats::new();
-    ONES[..2].iter().for_each(|v| d.update(*v));
+    ONES[..2].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 2u32);
     chk!(d.min(), Ok(1.0));
@@ -176,7 +184,7 @@ fn test_batch_stats_2_ones() {
 #[test]
 fn test_batch_stats_3_ones() {
     let mut d = Stats::new();
-    ONES[..3].iter().for_each(|v| d.update(*v));
+    ONES[..3].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 3u32);
     chk!(d.min(), Ok(1.0));
@@ -197,7 +205,7 @@ fn test_batch_stats_3_ones() {
 #[test]
 fn test_batch_stats_4_ones() {
     let mut d = Stats::new();
-    ONES[..4].iter().for_each(|v| d.update(*v));
+    ONES[..4].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 4u32);
     chk!(d.min(), Ok(1.0));
@@ -216,7 +224,7 @@ fn test_batch_stats_4_ones() {
 #[test]
 fn test_batch_stats_5_ones() {
     let mut d = Stats::new();
-    ONES[..5].iter().for_each(|v| d.update(*v));
+    ONES[..5].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(1.0));
@@ -235,7 +243,7 @@ fn test_batch_stats_5_ones() {
 #[test]
 fn test_batch_stats_2_ascending() {
     let mut d = Stats::new();
-    ASCENDING[..2].iter().for_each(|v| d.update(*v));
+    ASCENDING[..2].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 2u32);
     chk!(d.min(), Ok(1.0));
@@ -255,7 +263,7 @@ fn test_batch_stats_2_ascending() {
 #[test]
 fn test_batch_stats_3_ascending() {
     let mut d = Stats::new();
-    ASCENDING[..3].iter().for_each(|v| d.update(*v));
+    ASCENDING[..3].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 3u32);
     chk!(d.min(), Ok(1.0));
@@ -276,7 +284,7 @@ fn test_batch_stats_3_ascending() {
 #[test]
 fn test_batch_stats_4_ascending() {
     let mut d = Stats::new();
-    ASCENDING[..4].iter().for_each(|v| d.update(*v));
+    ASCENDING[..4].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 4u32);
     chk!(d.min(), Ok(1.0));
@@ -295,7 +303,7 @@ fn test_batch_stats_4_ascending() {
 #[test]
 fn test_batch_stats_5_ascending() {
     let mut d = Stats::new();
-    ASCENDING[..5].iter().for_each(|v| d.update(*v));
+    ASCENDING[..5].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(1.0));
@@ -315,8 +323,7 @@ fn test_batch_stats_5_ascending() {
 #[test]
 fn test_update1() {
     let mut d = Stats::new();
-    d.update(2.3);
-    // VALUES[..1].iter().for_each(|v| d.update(*v));
+    d.update(2.3).unwrap();
     // With one value added, the first moment, the mean, exists but none of the other moments are
     // defined.
     chk!(d.count(), 1u32);
@@ -338,8 +345,8 @@ fn test_update1() {
 // Call update() with 2 values
 fn test_update2() {
     let mut d = Stats::new();
-    d.update(2.3);
-    d.update(0.4);
+    d.update(2.3).unwrap();
+    d.update(0.4).unwrap();
     // With two values added, the first two moments exist: the mean and the variance. The next two,
     // the skew and kurtosis, are defined for the population, but not for samples.
     chk!(d.count(), 2u32);
@@ -361,9 +368,9 @@ fn test_update2() {
 // Call update() with 3 values.
 fn test_update3() {
     let mut d = Stats::new();
-    d.update(2.3);
-    d.update(0.4);
-    d.update(-3.4);
+    d.update(2.3).unwrap();
+    d.update(0.4).unwrap();
+    d.update(-3.4).unwrap();
     // With three values added, the first three moments exist: the mean, the variance, and the skew
     // are defined. The population kurtosis exists, but not the sample kurtosis.
     chk!(d.count(), 3u32);
@@ -385,10 +392,10 @@ fn test_update3() {
 // Call update() with 4 values.
 fn test_update4() {
     let mut d = Stats::new();
-    d.update(2.3);
-    d.update(0.4);
-    d.update(-3.4);
-    d.update(1.0);
+    d.update(2.3).unwrap();
+    d.update(0.4).unwrap();
+    d.update(-3.4).unwrap();
+    d.update(1.0).unwrap();
     // With four values added, all of the first four moments of the statistics are available: the
     // mean, the variance, the skew, and the kurtosis, both populations and samples. Note that this
     // is not always the case, as the all-zeros case below shows.
@@ -412,11 +419,11 @@ fn test_update4() {
 fn test_update5() {
     let mut d = Stats::new();
 
-    d.update(2.3);
-    d.update(0.4);
-    d.update(-3.4);
-    d.update(1.0);
-    d.update(5.0);
+    d.update(2.3).unwrap();
+    d.update(0.4).unwrap();
+    d.update(-3.4).unwrap();
+    d.update(1.0).unwrap();
+    d.update(5.0).unwrap();
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(-3.4));
     chk!(d.max(), Ok(5.0));
@@ -436,7 +443,7 @@ fn test_update5() {
 // Call update() with 10 values that are also used in the batch tests.
 fn test_update10() {
     let mut d = Stats::new();
-    VALUES[..10].iter().for_each(|v| d.update(*v));
+    VALUES[..10].iter().for_each(|v| d.update(*v).unwrap());
 
     chk!(d.count(), 10);
     chk!(d.min(), Ok(-123.4));
