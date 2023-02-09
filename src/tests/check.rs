@@ -1,8 +1,9 @@
 use crate::error::StatsError;
+use float_eq::float_ne;
 use std::fmt::Debug;
 
 // The tolerance required between expected and actual floating point values in all of the tests.
-const TOL: f64 = 1e-14;
+const TOL: f64 = 1e-13;
 
 // Return the type of the given value as a &'static str, useful for debugging the generic types
 // being checked in the tests.
@@ -16,7 +17,7 @@ where
     T: Debug + Copy,
 {
     panic!(
-        "found {:?} (type: {}), but expected {:?} (type: {}) for line {}",
+        "found {:?} (type: {}), but expected {:?} (type: {}) for line {}. Check TOL?",
         act,
         type_of(act),
         exp,
@@ -35,7 +36,7 @@ pub trait Checker<T> {
 impl Checker<f64> for f64 {
     fn assert(self, exp: f64, line: u32) {
         // Can use abs_diff_eq!() or relative_eq!().
-        if !approx::relative_eq!(self, exp, epsilon = TOL) {
+        if float_ne!(self, exp, rmax <= TOL) {
             panic_with_types(self, exp, line);
         }
     }

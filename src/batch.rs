@@ -1,7 +1,6 @@
 use crate::error::{Result, StatsError};
 
 //
-//
 // Batch functions
 //
 // These are non-incremental functions that operate on the data passed into them.

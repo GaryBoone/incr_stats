@@ -451,7 +451,7 @@ fn test_update10() {
     chk!(d.sum(), Ok(62.83));
     chk!(d.mean(), Ok(6.283));
     chk!(d.population_variance(), Ok(3165.19316100));
-    chk!(d.sample_variance(), Ok(3516.88129));
+    chk!(d.sample_variance(), Ok(3516.8812900000003));
     chk!(d.population_standard_deviation(), Ok(56.26004942230321));
     chk!(d.sample_standard_deviation(), Ok(59.3032991493728));
     chk!(d.population_skew(), Ok(-0.4770396201629045));

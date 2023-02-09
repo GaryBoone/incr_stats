@@ -1,11 +1,13 @@
 [package]
 name = "rust_stats"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Gary Boone <gary.boone@gmail.com>"]
 license = "MIT"
+repository = "https://github.com/garyboone/rust_stats"
+keywords = ["rust", "statistics", "incremental", "skewness", "kurtosis"]
 include = ["src/**/*", "LICENSE", "README.md"]
 
 [dependencies]
-approx = "0.5.1"
+float_eq = "1.0.1"
 thiserror = "1.0.38"

@@ -10,3 +10,7 @@ mod tests {
     mod equivalence_test;
     mod incr_test;
 }
+
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;
