@@ -1,4 +1,4 @@
-use rust_stats::incr::Stats;
+use incr_stats::incr::Stats;
 
 const DATA: [f64; 10] = [1.2, -1.0, 2.3, 10.0, -3.0, 3.2, 0.33, 0.23, 0.23, 1.0];
 
