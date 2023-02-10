@@ -83,7 +83,7 @@ impl Stats {
     // Update the stats with the given array of values using incremental updates for each value. If
     // all of the data is contained in a single array, the batch functions below would be faster.
     // However, this function allows incremental updates with more than one value at a time.
-    pub fn update_array(&mut self, data: &[f64]) -> Result<()> {
+    pub fn array_update(&mut self, data: &[f64]) -> Result<()> {
         for v in data {
             self.update(*v)?;
         }
@@ -118,7 +118,7 @@ impl Stats {
         Ok(f64::sqrt(self.sample_variance()?))
     }
 
-    pub fn population_skew(&self) -> Result<f64> {
+    pub fn population_skewness(&self) -> Result<f64> {
         if self.n_int <= 1 {
             return Err(StatsError::NotEnoughData);
         }
@@ -128,11 +128,11 @@ impl Stats {
         Ok(f64::sqrt(self.n / (self.m2 * self.m2 * self.m2)) * self.m3)
     }
 
-    pub fn sample_skew(&self) -> Result<f64> {
+    pub fn sample_skewness(&self) -> Result<f64> {
         if self.n_int <= 2 {
             return Err(StatsError::NotEnoughData);
         }
-        Ok(f64::sqrt(self.n * (self.n - 1.0)) / (self.n - 2.0) * self.population_skew()?)
+        Ok(f64::sqrt(self.n * (self.n - 1.0)) / (self.n - 2.0) * self.population_skewness()?)
     }
 
     // The kurtosis functions return _excess_ kurtosis, so that the kurtosis of a normal

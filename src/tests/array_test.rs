@@ -10,7 +10,7 @@ fn test_update_array10() {
         1.0, -2.0, 13.0, 47.0, 115.0, -0.03, -123.4, 23.0, -23.04, 12.3,
     ];
     // Load the first half of the array
-    d.update_array(&a[..5]).unwrap();
+    d.array_update(&a[..5]).unwrap();
     chk!(d.count(), 5);
     chk!(d.min(), Ok(-2.0));
     chk!(d.max(), Ok(115.0));
@@ -20,13 +20,13 @@ fn test_update_array10() {
     chk!(d.sample_variance(), Ok(2388.2));
     chk!(d.population_standard_deviation(), Ok(43.70995309995196));
     chk!(d.sample_standard_deviation(), Ok(48.869213212410116));
-    chk!(d.population_skew(), Ok(1.003118841855798));
-    chk!(d.sample_skew(), Ok(1.495361279933617));
+    chk!(d.population_skewness(), Ok(1.003118841855798));
+    chk!(d.sample_skewness(), Ok(1.495361279933617));
     chk!(d.population_kurtosis(), Ok(-0.5476524250400354));
     chk!(d.sample_kurtosis(), Ok(1.809390299839858));
 
     // Load rest of array. The results will be cumulative.
-    d.update_array(&a[5..]).unwrap();
+    d.array_update(&a[5..]).unwrap();
     chk!(d.count(), 10);
     chk!(d.min(), Ok(-123.4));
     chk!(d.max(), Ok(115.0));
@@ -36,8 +36,8 @@ fn test_update_array10() {
     chk!(d.sample_variance(), Ok(3516.88129));
     chk!(d.population_standard_deviation(), Ok(56.26004942230321));
     chk!(d.sample_standard_deviation(), Ok(59.3032991493728));
-    chk!(d.population_skew(), Ok(-0.4770396201629045));
-    chk!(d.sample_skew(), Ok(-0.565699400196136));
+    chk!(d.population_skewness(), Ok(-0.4770396201629045));
+    chk!(d.sample_skewness(), Ok(-0.565699400196136));
     chk!(d.population_kurtosis(), Ok(1.253240236214162));
     chk!(d.sample_kurtosis(), Ok(3.179835417592894));
 }

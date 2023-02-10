@@ -32,8 +32,8 @@ fn test_update_empty() {
     chk!(d.sample_variance(), Err(NotEnoughData));
     chk!(d.population_standard_deviation(), Err(NotEnoughData));
     chk!(d.sample_standard_deviation(), Err(NotEnoughData));
-    chk!(d.population_skew(), Err(NotEnoughData));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Err(NotEnoughData));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Err(NotEnoughData));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -52,8 +52,8 @@ fn test_batch_stats_1_zero() {
     chk!(d.sample_variance(), Err(NotEnoughData));
     chk!(d.population_standard_deviation(), Err(NotEnoughData));
     chk!(d.sample_standard_deviation(), Err(NotEnoughData));
-    chk!(d.population_skew(), Err(NotEnoughData));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Err(NotEnoughData));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Err(NotEnoughData));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -73,8 +73,8 @@ fn test_batch_stats_2_zeros() {
     chk!(d.sample_variance(), Ok(0.0));
     chk!(d.population_standard_deviation(), Ok(0.0));
     chk!(d.sample_standard_deviation(), Ok(0.0));
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -95,8 +95,8 @@ fn test_batch_stats_3_zeros() {
     chk!(d.sample_standard_deviation(), Ok(0.0));
     // With three values, the third moment (skew) is available, but because it's all zeros, they're
     // undefined.
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(Undefined));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(Undefined));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -116,8 +116,8 @@ fn test_batch_stats_4_zeros() {
     chk!(d.sample_standard_deviation(), Ok(0.0));
     // With four values, the fourth moment (kurtosis) is available, but because it's all zeros,
     // they're undefined.
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(Undefined));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(Undefined));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(Undefined));
 }
@@ -135,8 +135,8 @@ fn test_batch_stats_5_zeros() {
     chk!(d.sample_variance(), Ok(0.0));
     chk!(d.population_standard_deviation(), Ok(0.0));
     chk!(d.sample_standard_deviation(), Ok(0.0));
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(Undefined));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(Undefined));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(Undefined));
 }
@@ -155,8 +155,8 @@ fn test_batch_stats_1_one() {
     chk!(d.sample_variance(), Err(NotEnoughData));
     chk!(d.population_standard_deviation(), Err(NotEnoughData));
     chk!(d.sample_standard_deviation(), Err(NotEnoughData));
-    chk!(d.population_skew(), Err(NotEnoughData));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Err(NotEnoughData));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Err(NotEnoughData));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -175,8 +175,8 @@ fn test_batch_stats_2_ones() {
     chk!(d.sample_variance(), Ok(0.0));
     chk!(d.population_standard_deviation(), Ok(0.0));
     chk!(d.sample_standard_deviation(), Ok(0.0));
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -197,8 +197,8 @@ fn test_batch_stats_3_ones() {
     chk!(d.sample_standard_deviation(), Ok(0.0));
     // With three values, the third moment (skew) is available, but because it's all ones, the
     // variance is 0.0, so they're undefined.
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(Undefined));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(Undefined));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -216,8 +216,8 @@ fn test_batch_stats_4_ones() {
     chk!(d.sample_variance(), Ok(0.0));
     chk!(d.population_standard_deviation(), Ok(0.0));
     chk!(d.sample_standard_deviation(), Ok(0.0));
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(Undefined));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(Undefined));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(Undefined));
 }
@@ -235,8 +235,8 @@ fn test_batch_stats_5_ones() {
     chk!(d.sample_variance(), Ok(0.0));
     chk!(d.population_standard_deviation(), Ok(0.0));
     chk!(d.sample_standard_deviation(), Ok(0.0));
-    chk!(d.population_skew(), Err(Undefined));
-    chk!(d.sample_skew(), Err(Undefined));
+    chk!(d.population_skewness(), Err(Undefined));
+    chk!(d.sample_skewness(), Err(Undefined));
     chk!(d.population_kurtosis(), Err(Undefined));
     chk!(d.sample_kurtosis(), Err(Undefined));
 }
@@ -254,8 +254,8 @@ fn test_batch_stats_2_ascending() {
     chk!(d.sample_variance(), Ok(0.5));
     chk!(d.population_standard_deviation(), Ok(0.5));
     chk!(d.sample_standard_deviation(), Ok(0.7071067811865476));
-    chk!(d.population_skew(), Ok(0.0));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Ok(0.0));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Ok(-2.0));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -276,8 +276,8 @@ fn test_batch_stats_3_ascending() {
     chk!(d.sample_standard_deviation(), Ok(1.0));
     // With three values, the third moment (skew) is available, but because the data is linear,
     // the skew is 0.0.
-    chk!(d.population_skew(), Ok(0.0));
-    chk!(d.sample_skew(), Ok(0.0));
+    chk!(d.population_skewness(), Ok(0.0));
+    chk!(d.sample_skewness(), Ok(0.0));
     chk!(d.population_kurtosis(), Ok(-1.5));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -295,8 +295,8 @@ fn test_batch_stats_4_ascending() {
     chk!(d.sample_variance(), Ok(1.6666666666666667));
     chk!(d.population_standard_deviation(), Ok(1.118033988749895));
     chk!(d.sample_standard_deviation(), Ok(1.2909944487358056));
-    chk!(d.population_skew(), Ok(0.0));
-    chk!(d.sample_skew(), Ok(0.0));
+    chk!(d.population_skewness(), Ok(0.0));
+    chk!(d.sample_skewness(), Ok(0.0));
     chk!(d.population_kurtosis(), Ok(-1.36));
     chk!(d.sample_kurtosis(), Ok(-1.2));
 }
@@ -314,8 +314,8 @@ fn test_batch_stats_5_ascending() {
     chk!(d.sample_variance(), Ok(2.5));
     chk!(d.population_standard_deviation(), Ok(1.4142135623730951));
     chk!(d.sample_standard_deviation(), Ok(1.5811388300841898));
-    chk!(d.population_skew(), Ok(0.0));
-    chk!(d.sample_skew(), Ok(0.0));
+    chk!(d.population_skewness(), Ok(0.0));
+    chk!(d.sample_skewness(), Ok(0.0));
     chk!(d.population_kurtosis(), Ok(-1.3));
     chk!(d.sample_kurtosis(), Ok(-1.2));
 }
@@ -335,8 +335,8 @@ fn test_update1() {
     chk!(d.sample_variance(), Err(NotEnoughData));
     chk!(d.population_standard_deviation(), Err(NotEnoughData));
     chk!(d.sample_standard_deviation(), Err(NotEnoughData));
-    chk!(d.population_skew(), Err(NotEnoughData));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Err(NotEnoughData));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Err(NotEnoughData));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -358,8 +358,8 @@ fn test_update2() {
     chk!(d.sample_variance(), Ok(1.805));
     chk!(d.population_standard_deviation(), Ok(0.95));
     chk!(d.sample_standard_deviation(), Ok(1.34350288425444));
-    chk!(d.population_skew(), Ok(0.0));
-    chk!(d.sample_skew(), Err(NotEnoughData));
+    chk!(d.population_skewness(), Ok(0.0));
+    chk!(d.sample_skewness(), Err(NotEnoughData));
     chk!(d.population_kurtosis(), Ok(-2.0));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -382,8 +382,8 @@ fn test_update3() {
     chk!(d.sample_variance(), Ok(8.42333333333333));
     chk!(d.population_standard_deviation(), Ok(2.36971634495683));
     chk!(d.sample_standard_deviation(), Ok(2.90229794013870));
-    chk!(d.population_skew(), Ok(-0.3818017741606063));
-    chk!(d.sample_skew(), Ok(-0.9352195295828242));
+    chk!(d.population_skewness(), Ok(-0.3818017741606063));
+    chk!(d.sample_skewness(), Ok(-0.9352195295828242));
     chk!(d.population_kurtosis(), Ok(-1.5));
     chk!(d.sample_kurtosis(), Err(NotEnoughData));
 }
@@ -408,8 +408,8 @@ fn test_update4() {
     chk!(d.sample_variance(), Ok(5.995833333333334));
     chk!(d.population_standard_deviation(), Ok(2.1205836460748255));
     chk!(d.sample_standard_deviation(), Ok(2.448639077800837));
-    chk!(d.population_skew(), Ok(-0.7896884520711479));
-    chk!(d.sample_skew(), Ok(-1.3677805211376484));
+    chk!(d.population_skewness(), Ok(-0.7896884520711479));
+    chk!(d.sample_skewness(), Ok(-1.3677805211376484));
     chk!(d.population_kurtosis(), Ok(-0.885055475846336));
     chk!(d.sample_kurtosis(), Ok(2.3620839311524797));
 }
@@ -433,8 +433,8 @@ fn test_update5() {
     chk!(d.sample_variance(), Ok(9.348));
     chk!(d.population_standard_deviation(), Ok(2.73466634162195375));
     chk!(d.sample_standard_deviation(), Ok(3.0574499178236754));
-    chk!(d.population_skew(), Ok(-0.2536279920849069));
-    chk!(d.sample_skew(), Ok(-0.3780862875324203));
+    chk!(d.population_skewness(), Ok(-0.2536279920849069));
+    chk!(d.sample_skewness(), Ok(-0.3780862875324203));
     chk!(d.population_kurtosis(), Ok(-0.7140988125390337));
     chk!(d.sample_kurtosis(), Ok(1.143604749843865));
 }
@@ -454,8 +454,8 @@ fn test_update10() {
     chk!(d.sample_variance(), Ok(3516.8812900000003));
     chk!(d.population_standard_deviation(), Ok(56.26004942230321));
     chk!(d.sample_standard_deviation(), Ok(59.3032991493728));
-    chk!(d.population_skew(), Ok(-0.4770396201629045));
-    chk!(d.sample_skew(), Ok(-0.565699400196136));
+    chk!(d.population_skewness(), Ok(-0.4770396201629045));
+    chk!(d.sample_skewness(), Ok(-0.565699400196136));
     chk!(d.population_kurtosis(), Ok(1.253240236214162));
     chk!(d.sample_kurtosis(), Ok(3.179835417592894));
 }

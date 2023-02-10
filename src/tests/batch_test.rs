@@ -35,8 +35,8 @@ fn test_batch_stats_empty() {
     chk!(batch::sample_variance(&a), Err(NotEnoughData));
     chk!(batch::population_standard_deviation(&a), Err(NotEnoughData));
     chk!(batch::sample_standard_deviation(&a), Err(NotEnoughData));
-    chk!(batch::population_skew(&a), Err(NotEnoughData));
-    chk!(batch::sample_skew(&a), Err(NotEnoughData));
+    chk!(batch::population_skewness(&a), Err(NotEnoughData));
+    chk!(batch::sample_skewness(&a), Err(NotEnoughData));
     chk!(batch::population_kurtosis(&a), Err(NotEnoughData));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -54,8 +54,8 @@ fn test_batch_stats_1_zero() {
     chk!(batch::sample_variance(&a), Err(NotEnoughData));
     chk!(batch::population_standard_deviation(&a), Err(NotEnoughData));
     chk!(batch::sample_standard_deviation(&a), Err(NotEnoughData));
-    chk!(batch::population_skew(&a), Err(NotEnoughData));
-    chk!(batch::sample_skew(&a), Err(NotEnoughData));
+    chk!(batch::population_skewness(&a), Err(NotEnoughData));
+    chk!(batch::sample_skewness(&a), Err(NotEnoughData));
     chk!(batch::population_kurtosis(&a), Err(NotEnoughData));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -73,8 +73,8 @@ fn test_batch_stats_2_zeros() {
     chk!(batch::sample_variance(&a), Ok(0.0));
     chk!(batch::population_standard_deviation(&a), Ok(0.0));
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(NotEnoughData));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(NotEnoughData));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -93,8 +93,8 @@ fn test_batch_stats_3_zeros() {
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
     // With three values, the third moment (skew) is available, but because it's all zeros, they're
     // undefined.
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(Undefined));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(Undefined));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -112,8 +112,8 @@ fn test_batch_stats_4_zeros() {
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
     // With four values, the fourth moment (kurtosis) is available, but because it's all zeros,
     // they're undefined.
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(Undefined));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(Undefined));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(Undefined));
 }
@@ -129,8 +129,8 @@ fn test_batch_stats_5_zeros() {
     chk!(batch::sample_variance(&a), Ok(0.0));
     chk!(batch::population_standard_deviation(&a), Ok(0.0));
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(Undefined));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(Undefined));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(Undefined));
 }
@@ -147,8 +147,8 @@ fn test_batch_stats_1_one() {
     chk!(batch::sample_variance(&a), Err(NotEnoughData));
     chk!(batch::population_standard_deviation(&a), Err(NotEnoughData));
     chk!(batch::sample_standard_deviation(&a), Err(NotEnoughData));
-    chk!(batch::population_skew(&a), Err(NotEnoughData));
-    chk!(batch::sample_skew(&a), Err(NotEnoughData));
+    chk!(batch::population_skewness(&a), Err(NotEnoughData));
+    chk!(batch::sample_skewness(&a), Err(NotEnoughData));
     chk!(batch::population_kurtosis(&a), Err(NotEnoughData));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -165,8 +165,8 @@ fn test_batch_stats_2_ones() {
     chk!(batch::sample_variance(&a), Ok(0.0));
     chk!(batch::population_standard_deviation(&a), Ok(0.0));
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(NotEnoughData));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(NotEnoughData));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -185,8 +185,8 @@ fn test_batch_stats_3_ones() {
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
     // With three values, the third moment (skew) is available, but because it's all ones, the
     // variance is 0.0, so they're undefined.
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(Undefined));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(Undefined));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -202,8 +202,8 @@ fn test_batch_stats_4_ones() {
     chk!(batch::sample_variance(&a), Ok(0.0));
     chk!(batch::population_standard_deviation(&a), Ok(0.0));
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(Undefined));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(Undefined));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(Undefined));
 }
@@ -219,8 +219,8 @@ fn test_batch_stats_5_ones() {
     chk!(batch::sample_variance(&a), Ok(0.0));
     chk!(batch::population_standard_deviation(&a), Ok(0.0));
     chk!(batch::sample_standard_deviation(&a), Ok(0.0));
-    chk!(batch::population_skew(&a), Err(Undefined));
-    chk!(batch::sample_skew(&a), Err(Undefined));
+    chk!(batch::population_skewness(&a), Err(Undefined));
+    chk!(batch::sample_skewness(&a), Err(Undefined));
     chk!(batch::population_kurtosis(&a), Err(Undefined));
     chk!(batch::sample_kurtosis(&a), Err(Undefined));
 }
@@ -236,8 +236,8 @@ fn test_batch_stats_2_ascending() {
     chk!(batch::sample_variance(&a), Ok(0.5));
     chk!(batch::population_standard_deviation(&a), Ok(0.5));
     chk!(batch::sample_standard_deviation(&a), Ok(0.7071067811865476));
-    chk!(batch::population_skew(&a), Ok(0.0));
-    chk!(batch::sample_skew(&a), Err(NotEnoughData));
+    chk!(batch::population_skewness(&a), Ok(0.0));
+    chk!(batch::sample_skewness(&a), Err(NotEnoughData));
     chk!(batch::population_kurtosis(&a), Ok(-2.0));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -259,8 +259,8 @@ fn test_batch_stats_3_ascending() {
     chk!(batch::sample_standard_deviation(&a), Ok(1.0));
     // With three values, the third moment (skew) is available, but because the data is linear,
     // the skew is 0.0.
-    chk!(batch::population_skew(&a), Ok(0.0));
-    chk!(batch::sample_skew(&a), Ok(0.0));
+    chk!(batch::population_skewness(&a), Ok(0.0));
+    chk!(batch::sample_skewness(&a), Ok(0.0));
     chk!(batch::population_kurtosis(&a), Ok(-1.5));
     chk!(batch::sample_kurtosis(&a), Err(NotEnoughData));
 }
@@ -279,8 +279,8 @@ fn test_batch_stats_4_ascending() {
         Ok(1.118033988749895)
     );
     chk!(batch::sample_standard_deviation(&a), Ok(1.2909944487358056));
-    chk!(batch::population_skew(&a), Ok(0.0));
-    chk!(batch::sample_skew(&a), Ok(0.0));
+    chk!(batch::population_skewness(&a), Ok(0.0));
+    chk!(batch::sample_skewness(&a), Ok(0.0));
     chk!(batch::population_kurtosis(&a), Ok(-1.36));
     chk!(batch::sample_kurtosis(&a), Ok(-1.2));
 }
@@ -299,8 +299,8 @@ fn test_batch_stats_5_ascending() {
         Ok(1.4142135623730951)
     );
     chk!(batch::sample_standard_deviation(&a), Ok(1.5811388300841898));
-    chk!(batch::population_skew(&a), Ok(0.0));
-    chk!(batch::sample_skew(&a), Ok(0.0));
+    chk!(batch::population_skewness(&a), Ok(0.0));
+    chk!(batch::sample_skewness(&a), Ok(0.0));
     chk!(batch::population_kurtosis(&a), Ok(-1.3));
     chk!(batch::sample_kurtosis(&a), Ok(-1.2));
 }
@@ -323,8 +323,8 @@ fn test_batch_stats_ten_values() {
         Ok(56.26004942230321)
     );
     chk!(batch::sample_standard_deviation(&a), Ok(59.3032991493728));
-    chk!(batch::population_skew(&a), Ok(-0.4770396201629045));
-    chk!(batch::sample_skew(&a), Ok(-0.565699400196136));
+    chk!(batch::population_skewness(&a), Ok(-0.4770396201629045));
+    chk!(batch::sample_skewness(&a), Ok(-0.565699400196136));
     chk!(batch::population_kurtosis(&a), Ok(1.253240236214162));
     chk!(batch::sample_kurtosis(&a), Ok(3.179835417592894));
 }

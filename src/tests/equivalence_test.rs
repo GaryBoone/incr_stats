@@ -19,8 +19,8 @@ fn check_all(d: &Stats, a: &[f64]) {
         batch::sample_standard_deviation(&a),
         d.sample_standard_deviation()
     );
-    chk!(batch::population_skew(&a), d.population_skew());
-    chk!(batch::sample_skew(&a), d.sample_skew());
+    chk!(batch::population_skewness(&a), d.population_skewness());
+    chk!(batch::sample_skewness(&a), d.sample_skewness());
     chk!(batch::population_kurtosis(&a), d.population_kurtosis());
     chk!(batch::sample_kurtosis(&a), d.sample_kurtosis());
 }

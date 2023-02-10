@@ -93,10 +93,10 @@ pub fn sample_standard_deviation(data: &[f64]) -> Result<f64> {
     Ok(f64::sqrt(sample_variance(data)?))
 }
 
-// population_skew:
+// population_skewness:
 // R: skewness(a)
 // Octave: skewness(a)
-pub fn population_skew(data: &[f64]) -> Result<f64> {
+pub fn population_skewness(data: &[f64]) -> Result<f64> {
     if data.len() <= 1 {
         return Err(StatsError::NotEnoughData);
     }
@@ -115,16 +115,16 @@ pub fn population_skew(data: &[f64]) -> Result<f64> {
     Ok(sum3 / n / (variance * variance * variance))
 }
 
-// sample_skew:
+// sample_skewness:
 // R: Skew(a, method=2) => -0.5656994001961358 (G_1 = g_1 * sqrt(n(n-1)) / (n-2))
 // Octave: skewness(a10, 0)
-pub fn sample_skew(data: &[f64]) -> Result<f64> {
+pub fn sample_skewness(data: &[f64]) -> Result<f64> {
     if data.len() <= 2 {
         return Err(StatsError::NotEnoughData);
     }
-    let pop_skew = population_skew(data)?;
+    let pop_skewness = population_skewness(data)?;
     let n = data.len() as f64;
-    let skew = f64::sqrt(n * (n - 1.0)) / (n - 2.0) * pop_skew;
+    let skew = f64::sqrt(n * (n - 1.0)) / (n - 2.0) * pop_skewness;
     Ok(skew)
 }
 
