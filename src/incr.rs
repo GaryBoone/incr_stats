@@ -90,6 +90,9 @@ impl Stats {
         Ok(())
     }
 
+    // Population variance:
+    // R: var.pop=function(x){(length(x)-1)/length(x)*var(x)}
+    // Octave: var(a, 1)
     pub fn population_variance(&self) -> Result<f64> {
         if self.n_int == 0 || self.n_int == 1 {
             return Err(StatsError::NotEnoughData);
@@ -97,6 +100,9 @@ impl Stats {
         Ok(self.m2 / self.n)
     }
 
+    // Sample variance:
+    // R: var(a)
+    // Octave: var(a)
     pub fn sample_variance(&self) -> Result<f64> {
         if self.n_int == 0 || self.n_int == 1 {
             return Err(StatsError::NotEnoughData);
@@ -104,6 +110,9 @@ impl Stats {
         Ok(self.m2 / (self.n - 1.0))
     }
 
+    // Population standard deviation:
+    // R: sd.pop=function(x){sd(x)*sqrt((length(x)-1)/length(x))}
+    // Octave: std(a, 1)
     pub fn population_standard_deviation(&self) -> Result<f64> {
         if self.n_int == 0 || self.n_int == 1 {
             return Err(StatsError::NotEnoughData);
@@ -111,6 +120,9 @@ impl Stats {
         Ok(f64::sqrt(self.population_variance()?))
     }
 
+    // Sample standard deviation:
+    // R: sd(a)
+    // Octave: std(a)
     pub fn sample_standard_deviation(&self) -> Result<f64> {
         if self.n_int <= 1 {
             return Err(StatsError::NotEnoughData);
@@ -118,6 +130,10 @@ impl Stats {
         Ok(f64::sqrt(self.sample_variance()?))
     }
 
+    // Population skewness:
+    // R: library(moments); skewness(a)
+    // or library(DescTools); Skew(a, method = 1)
+    // Octave: skewness(a)
     pub fn population_skewness(&self) -> Result<f64> {
         if self.n_int <= 1 {
             return Err(StatsError::NotEnoughData);
@@ -128,6 +144,9 @@ impl Stats {
         Ok(f64::sqrt(self.n / (self.m2 * self.m2 * self.m2)) * self.m3)
     }
 
+    // Sample skewness:
+    // R: library(DescTools); Skew(a, method=2)
+    // Octave: skewness(a, 0)
     pub fn sample_skewness(&self) -> Result<f64> {
         if self.n_int <= 2 {
             return Err(StatsError::NotEnoughData);
@@ -135,9 +154,15 @@ impl Stats {
         Ok(f64::sqrt(self.n * (self.n - 1.0)) / (self.n - 2.0) * self.population_skewness()?)
     }
 
-    // The kurtosis functions return _excess_ kurtosis, so that the kurtosis of a normal
-    // distribution = 0.0. Then kurtosis < 0.0 indicates platykurtic (flat) while
-    // kurtosis > 0.0 indicates leptokurtic (peaked) and near 0 indicates mesokurtic.
+    // Population kurtosis:
+    // The kurtosis functions return _excess_ kurtosis.
+    //
+    // Interpretation: kurtosis < 0.0 indicates platykurtic (flat) while kurtosis > 0.0 indicates
+    // leptokurtic (peaked) and near 0 indicates mesokurtic (normal).
+    //
+    // R: library(moments); kurtosis(a) - 3.0 (excess kurtosis)
+    // or library(DescTools); Kurt(a, method = 1)
+    // Octave: kurtosis(a) - 3.0
     pub fn population_kurtosis(&self) -> Result<f64> {
         if self.n_int <= 1 {
             return Err(StatsError::NotEnoughData);
@@ -149,6 +174,9 @@ impl Stats {
         Ok(k)
     }
 
+    // Sample kurtosis:
+    // R: library(DescTools); Kurt(a, method = 2)
+    // Octave: kurtosis(a, 0) - 3.0
     pub fn sample_kurtosis(&self) -> Result<f64> {
         if self.n_int <= 3 {
             return Err(StatsError::NotEnoughData);

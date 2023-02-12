@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, Criterion};
 use incr_stats::{batch, incr::Stats};
 use rand::Rng;
 
@@ -107,4 +107,3 @@ criterion_group!(
     iter_1000_sample_kurtosis,
     batch_1000_sample_kurtosis,
 );
-criterion_main!(benches);

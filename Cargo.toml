@@ -15,5 +15,5 @@ rand = "0.8.5"
 thiserror = "1.0.38"
 
 [[bench]]
-name = "comparision_bench"
+name = "benches_main"
 harness = false

@@ -1,4 +1,5 @@
 pub mod batch;
+pub mod desc;
 pub mod error;
 pub mod incr;
 

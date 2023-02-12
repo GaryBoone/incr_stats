@@ -3,8 +3,15 @@ use crate::error::{Result, StatsError};
 //
 // Batch functions
 //
-// These are non-incremental functions that operate on the data passed into them.
-//
+// These are non-incremental, independent, functions that operate on the data passed into them.
+// Independence means that, unlike the `incr` or `desc` versions, they don't do any calculations
+// that are not required for the requested function. For example, the `incr` `update()` function
+// does intermediate moment calculations for skewness and kurtosis that are unnecessary if the only
+// statistic later requested is mean and variance. Similarly, the `desc` function does all of the
+// descriptive statistics calculations, many of which may not be requested. However, the downside of
+// independence is redundancy. If multiple statistics are requested, they may repeat calculations.
+// For example, several functions below require the mean of the data, but each will recalculate it
+// separately.
 
 // Check that the data contains no NaNs, Infs, or -Infs.
 pub fn validate(data: &[f64]) -> Result<()> {
@@ -58,8 +65,7 @@ fn sum_squared_deltas(data: &[f64]) -> Result<f64> {
     Ok(ssd)
 }
 
-// TODO: Document these
-// population_variance:
+// Population variance:
 // R: var.pop=function(x){(length(x)-1)/length(x)*var(x)}
 // Octave: var(a, 1)
 pub fn population_variance(data: &[f64]) -> Result<f64> {
@@ -69,7 +75,7 @@ pub fn population_variance(data: &[f64]) -> Result<f64> {
     Ok(sum_squared_deltas(data)? / (data.len() as f64))
 }
 
-// sample_variance:
+// Sample variance:
 // R: var(a)
 // Octave: var(a)
 pub fn sample_variance(data: &[f64]) -> Result<f64> {
@@ -79,22 +85,23 @@ pub fn sample_variance(data: &[f64]) -> Result<f64> {
     Ok(sum_squared_deltas(data)? / ((data.len() - 1) as f64))
 }
 
-// population_standard_deviation:
+// Population standard deviation:
 // R: sd.pop=function(x){sd(x)*sqrt((length(x)-1)/length(x))}
 // Octave: std(a, 1)
 pub fn population_standard_deviation(data: &[f64]) -> Result<f64> {
     Ok(f64::sqrt(population_variance(data)?))
 }
 
-// sample_standard_deviation:
+// Sample standard deviation:
 // R: sd(a)
 // Octave: std(a)
 pub fn sample_standard_deviation(data: &[f64]) -> Result<f64> {
     Ok(f64::sqrt(sample_variance(data)?))
 }
 
-// population_skewness:
-// R: skewness(a)
+// Population skewness:
+// R: library(moments); skewness(a)
+// or library(DescTools); Skew(a, method = 1)
 // Octave: skewness(a)
 pub fn population_skewness(data: &[f64]) -> Result<f64> {
     if data.len() <= 1 {
@@ -115,9 +122,9 @@ pub fn population_skewness(data: &[f64]) -> Result<f64> {
     Ok(sum3 / n / (variance * variance * variance))
 }
 
-// sample_skewness:
-// R: Skew(a, method=2) => -0.5656994001961358 (G_1 = g_1 * sqrt(n(n-1)) / (n-2))
-// Octave: skewness(a10, 0)
+// Sample skewness:
+// R: library(DescTools); Skew(a, method=2)
+// Octave: skewness(a, 0)
 pub fn sample_skewness(data: &[f64]) -> Result<f64> {
     if data.len() <= 2 {
         return Err(StatsError::NotEnoughData);
@@ -128,10 +135,15 @@ pub fn sample_skewness(data: &[f64]) -> Result<f64> {
     Ok(skew)
 }
 
-// The kurtosis functions return _excess_ kurtosis
-// population_kurtosis:
-// R: kurtosis(a)-3.0 (ie excess kurtosis), or Kurt(a10, method = 1)
-// Octave: kurtosis(a)-3.0
+// Population kurtosis:
+// The kurtosis functions return _excess_ kurtosis.
+//
+// Interpretation: kurtosis < 0.0 indicates platykurtic (flat) while kurtosis > 0.0 indicates
+// leptokurtic (peaked) and near 0 indicates mesokurtic (normal).
+//
+// R: library(moments); kurtosis(a) - 3.0 (excess kurtosis)
+// or library(DescTools); Kurt(a, method = 1)
+// Octave: kurtosis(a) - 3.0
 pub fn population_kurtosis(data: &[f64]) -> Result<f64> {
     if data.len() <= 1 {
         return Err(StatsError::NotEnoughData);
@@ -151,9 +163,9 @@ pub fn population_kurtosis(data: &[f64]) -> Result<f64> {
     Ok(kurtosis)
 }
 
-// sample_kurtosis:
-// R: Kurt(a, method = 2)
-// Octave: kurtosis(a, 0)-3.0
+// Sample kurtosis:
+// R: library(DescTools); Kurt(a, method = 2)
+// Octave: kurtosis(a, 0) - 3.0
 pub fn sample_kurtosis(data: &[f64]) -> Result<f64> {
     if data.len() <= 3 {
         return Err(StatsError::NotEnoughData);
