@@ -64,7 +64,6 @@ pub fn all_stats_1000(c: &mut Criterion) {
     for _ in 0..1000 {
         a.push(rng.gen())
     }
-    // Incremental
     c.bench_function("all_stats_1000_incr", |b| {
         b.iter(|| {
             let mut d = incr::Stats::new();
@@ -75,7 +74,6 @@ pub fn all_stats_1000(c: &mut Criterion) {
         })
     });
 
-    // Batch
     c.bench_function("all_stats_1000_batch", |b| {
         b.iter(|| batch_all_stats(black_box(&a)).unwrap())
     });
