@@ -1,10 +1,10 @@
 use crate::batch;
 use crate::chk;
-use crate::desc::Desc;
-use crate::incr::Stats;
+use crate::incr;
+use crate::vec;
 
 // Check that the incremental and batch functions return identical results.
-fn check_batch_v_incr(d: &Stats, a: &[f64]) {
+fn check_incr_v_batch(d: &incr::Stats, a: &[f64]) {
     chk!(batch::count(&a), d.count());
     chk!(batch::min(&a), d.min());
     chk!(batch::max(&a), d.max());
@@ -26,9 +26,8 @@ fn check_batch_v_incr(d: &Stats, a: &[f64]) {
     chk!(batch::sample_kurtosis(&a), d.sample_kurtosis());
 }
 
-// Check that the incremental and desc functions return identical results.
-fn check_incr_v_desc(s: &Stats, a: &[f64]) {
-    let mut d = Desc::new(a).unwrap();
+// Check that the incremental and vec_stats functions return identical results.
+fn check_incr_v_vec(s: &incr::Stats, d: &mut vec::Stats) {
     chk!(s.count(), d.count());
     chk!(s.min(), d.min());
     chk!(s.max(), d.max());
@@ -50,10 +49,11 @@ fn check_incr_v_desc(s: &Stats, a: &[f64]) {
 // Calculate statistics with empty data.
 #[test]
 fn test_incr_vs_batch_update_empty() {
-    let d = Stats::new();
-    let a = vec![];
-    check_batch_v_incr(&d, &a);
-    check_incr_v_desc(&d, &a);
+    let inc_stats = incr::Stats::new();
+    let mut emp = vec![];
+    let mut vec_stats = vec::Stats::new(&mut emp).unwrap();
+    check_incr_v_batch(&inc_stats, &vec![]);
+    check_incr_v_vec(&inc_stats, &mut vec_stats);
 }
 
 #[test]
@@ -64,10 +64,11 @@ fn test_incr_vs_batch_update_10_slices() {
     ];
     // Confirm the incremental and batch versions match for all slices of a.
     for i in 0..a.len() {
-        let mut d = Stats::new();
-        a[..i].iter().for_each(|v| d.update(*v).unwrap());
-        check_batch_v_incr(&d, &a[..i]);
-        check_incr_v_desc(&d, &a[..i]);
+        let mut inc_stats = incr::Stats::new();
+        a[..i].iter().for_each(|v| inc_stats.update(*v).unwrap());
+        let mut vec_stats = vec::Stats::new(&a[..i]).unwrap();
+        check_incr_v_batch(&inc_stats, &a[..i]);
+        check_incr_v_vec(&inc_stats, &mut vec_stats);
     }
 }
 
@@ -77,10 +78,11 @@ fn test_incr_vs_batch_update_for_zeros() {
     let a = vec![0.0; 10];
     // Confirm the incremental and batch versions match for all slices of a.
     for i in 0..a.len() {
-        let mut d = Stats::new();
-        a[..i].iter().for_each(|v| d.update(*v).unwrap());
-        check_batch_v_incr(&d, &a[..i]);
-        check_incr_v_desc(&d, &a[..i]);
+        let mut inc_stats = incr::Stats::new();
+        a[..i].iter().for_each(|v| inc_stats.update(*v).unwrap());
+        let mut vec_stats = vec::Stats::new(&a[..i]).unwrap();
+        check_incr_v_batch(&inc_stats, &a[..i]);
+        check_incr_v_vec(&inc_stats, &mut vec_stats);
     }
 }
 
@@ -90,9 +92,10 @@ fn test_incr_vs_batch_update_for_ones() {
     let a = vec![1.0; 10];
     // Confirm the incremental and batch versions match for all slices of a.
     for i in 0..a.len() {
-        let mut d = Stats::new();
-        a[..i].iter().for_each(|v| d.update(*v).unwrap());
-        check_batch_v_incr(&d, &a[..i]);
-        check_incr_v_desc(&d, &a[..i]);
+        let mut inc_stats = incr::Stats::new();
+        a[..i].iter().for_each(|v| inc_stats.update(*v).unwrap());
+        let mut vec_stats = vec::Stats::new(&a[..i]).unwrap();
+        check_incr_v_batch(&inc_stats, &a[..i]);
+        check_incr_v_vec(&inc_stats, &mut vec_stats);
     }
 }

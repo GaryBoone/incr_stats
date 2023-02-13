@@ -9,7 +9,7 @@ use crate::error::{Result, StatsError};
 // In contrast, the `descriptive()` function reuses calculations where possible.
 
 #[derive(Default, Debug, PartialEq)]
-pub struct Desc<'a> {
+pub struct Stats<'a> {
     data: &'a [f64],
     min: Option<f64>,
     max: Option<f64>,
@@ -26,10 +26,10 @@ pub struct Desc<'a> {
     sample_kurtosis: Option<f64>,
 }
 
-impl<'a> Desc<'a> {
+impl<'a> Stats<'a> {
     pub fn new(data: &'a [f64]) -> Result<Self> {
         batch::validate(data)?;
-        Ok(Desc {
+        Ok(Stats {
             data,
             ..Default::default()
         })
@@ -240,8 +240,8 @@ impl<'a> Desc<'a> {
     }
 }
 
-pub fn descriptive(a: &[f64]) -> Result<Desc> {
-    let mut d = Desc::new(a)?;
+pub fn descriptive(a: &[f64]) -> Result<Stats> {
+    let mut d = Stats::new(a)?;
     d.min()?;
     d.max()?;
     d.sum()?;
@@ -268,42 +268,51 @@ mod tests {
     #[test]
     fn test_sum_squared_deltas() {
         assert_eq!(
-            Desc::new(&vec![]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![]).unwrap().sum_squared_deltas(),
             Err(StatsError::NotEnoughData)
         );
-        assert_eq!(Desc::new(&vec![0.0]).unwrap().sum_squared_deltas(), Ok(0.0));
-        assert_eq!(Desc::new(&vec![1.0]).unwrap().sum_squared_deltas(), Ok(0.0));
-        assert_eq!(Desc::new(&vec![2.0]).unwrap().sum_squared_deltas(), Ok(0.0));
         assert_eq!(
-            Desc::new(&vec![-1.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![0.0]).unwrap().sum_squared_deltas(),
             Ok(0.0)
         );
         assert_eq!(
-            Desc::new(&vec![0.0, 0.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![1.0]).unwrap().sum_squared_deltas(),
             Ok(0.0)
         );
         assert_eq!(
-            Desc::new(&vec![1.0, 1.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![2.0]).unwrap().sum_squared_deltas(),
             Ok(0.0)
         );
         assert_eq!(
-            Desc::new(&vec![2.0, 2.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![-1.0]).unwrap().sum_squared_deltas(),
             Ok(0.0)
         );
         assert_eq!(
-            Desc::new(&vec![0.0, 1.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![0.0, 0.0]).unwrap().sum_squared_deltas(),
+            Ok(0.0)
+        );
+        assert_eq!(
+            Stats::new(&vec![1.0, 1.0]).unwrap().sum_squared_deltas(),
+            Ok(0.0)
+        );
+        assert_eq!(
+            Stats::new(&vec![2.0, 2.0]).unwrap().sum_squared_deltas(),
+            Ok(0.0)
+        );
+        assert_eq!(
+            Stats::new(&vec![0.0, 1.0]).unwrap().sum_squared_deltas(),
             Ok(0.5)
         );
         assert_eq!(
-            Desc::new(&vec![1.0, 2.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![1.0, 2.0]).unwrap().sum_squared_deltas(),
             Ok(0.5)
         );
         assert_eq!(
-            Desc::new(&vec![-1.0, 0.0]).unwrap().sum_squared_deltas(),
+            Stats::new(&vec![-1.0, 0.0]).unwrap().sum_squared_deltas(),
             Ok(0.5)
         );
         assert_eq!(
-            Desc::new(&vec![-1.0, 0.0, 1.0])
+            Stats::new(&vec![-1.0, 0.0, 1.0])
                 .unwrap()
                 .sum_squared_deltas(),
             Ok(2.0)

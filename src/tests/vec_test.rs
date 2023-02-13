@@ -1,6 +1,6 @@
 use crate::chk;
-use crate::desc::Desc;
 use crate::error::StatsError::{InvalidData, NotEnoughData, Undefined};
+use crate::vec::Stats;
 
 // Test the incremtal functions. Update the descriptive stats one point at a time.
 static ZEROS: [f64; 10] = [0.0; 10];
@@ -12,18 +12,18 @@ static VALUES: [f64; 10] = [
 
 #[test]
 fn test_update_with_bad_data() {
-    assert_eq!(Desc::new(&vec![f64::NAN]), Err(InvalidData));
-    assert_eq!(Desc::new(&vec![f64::INFINITY]), Err(InvalidData));
-    assert_eq!(Desc::new(&vec![f64::NEG_INFINITY]), Err(InvalidData));
-    assert_eq!(Desc::new(&vec![0.0, f64::NAN]), Err(InvalidData));
-    assert_eq!(Desc::new(&vec![0.0, f64::INFINITY]), Err(InvalidData));
-    assert_eq!(Desc::new(&vec![0.0, f64::NEG_INFINITY]), Err(InvalidData));
+    assert_eq!(Stats::new(&vec![f64::NAN]), Err(InvalidData));
+    assert_eq!(Stats::new(&vec![f64::INFINITY]), Err(InvalidData));
+    assert_eq!(Stats::new(&vec![f64::NEG_INFINITY]), Err(InvalidData));
+    assert_eq!(Stats::new(&vec![0.0, f64::NAN]), Err(InvalidData));
+    assert_eq!(Stats::new(&vec![0.0, f64::INFINITY]), Err(InvalidData));
+    assert_eq!(Stats::new(&vec![0.0, f64::NEG_INFINITY]), Err(InvalidData));
 }
 
 #[test]
 fn test_update_empty() {
     let empty = vec![];
-    let mut d = Desc::new(&empty).unwrap();
+    let mut d = Stats::new(&empty).unwrap();
     // With no values added, the first moment, the mean, is zero and none of the other moments are
     // defined.
     chk!(d.count(), 0);
@@ -42,7 +42,7 @@ fn test_update_empty() {
 }
 #[test]
 fn test_batch_stats_1_zero() {
-    let mut d = Desc::new(&ZEROS[..1]).unwrap();
+    let mut d = Stats::new(&ZEROS[..1]).unwrap();
     chk!(d.count(), 1u32);
     // With one value, the first moment (mean) is available.
     chk!(d.min(), Ok(0.0));
@@ -61,7 +61,7 @@ fn test_batch_stats_1_zero() {
 
 #[test]
 fn test_batch_stats_2_zeros() {
-    let mut d = Desc::new(&ZEROS[..2]).unwrap();
+    let mut d = Stats::new(&ZEROS[..2]).unwrap();
     chk!(d.count(), 2u32);
     chk!(d.min(), Ok(0.0));
     chk!(d.max(), Ok(0.0));
@@ -80,7 +80,7 @@ fn test_batch_stats_2_zeros() {
 
 #[test]
 fn test_batch_stats_3_zeros() {
-    let mut d = Desc::new(&ZEROS[..3]).unwrap();
+    let mut d = Stats::new(&ZEROS[..3]).unwrap();
     chk!(d.count(), 3u32);
     chk!(d.min(), Ok(0.0));
     chk!(d.max(), Ok(0.0));
@@ -99,7 +99,7 @@ fn test_batch_stats_3_zeros() {
 }
 #[test]
 fn test_batch_stats_4_zeros() {
-    let mut d = Desc::new(&ZEROS[..4]).unwrap();
+    let mut d = Stats::new(&ZEROS[..4]).unwrap();
     chk!(d.count(), 4u32);
     chk!(d.min(), Ok(0.0));
     chk!(d.max(), Ok(0.0));
@@ -118,7 +118,7 @@ fn test_batch_stats_4_zeros() {
 }
 #[test]
 fn test_batch_stats_5_zeros() {
-    let mut d = Desc::new(&ZEROS[..5]).unwrap();
+    let mut d = Stats::new(&ZEROS[..5]).unwrap();
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(0.0));
     chk!(d.max(), Ok(0.0));
@@ -136,7 +136,7 @@ fn test_batch_stats_5_zeros() {
 
 #[test]
 fn test_batch_stats_1_one() {
-    let mut d = Desc::new(&ONES[..1]).unwrap();
+    let mut d = Stats::new(&ONES[..1]).unwrap();
     chk!(d.count(), 1u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(1.0));
@@ -154,7 +154,7 @@ fn test_batch_stats_1_one() {
 
 #[test]
 fn test_batch_stats_2_ones() {
-    let mut d = Desc::new(&ONES[..2]).unwrap();
+    let mut d = Stats::new(&ONES[..2]).unwrap();
     chk!(d.count(), 2u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(1.0));
@@ -172,7 +172,7 @@ fn test_batch_stats_2_ones() {
 
 #[test]
 fn test_batch_stats_3_ones() {
-    let mut d = Desc::new(&ONES[..3]).unwrap();
+    let mut d = Stats::new(&ONES[..3]).unwrap();
     chk!(d.count(), 3u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(1.0));
@@ -192,7 +192,7 @@ fn test_batch_stats_3_ones() {
 
 #[test]
 fn test_batch_stats_4_ones() {
-    let mut d = Desc::new(&ONES[..4]).unwrap();
+    let mut d = Stats::new(&ONES[..4]).unwrap();
     chk!(d.count(), 4u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(1.0));
@@ -209,7 +209,7 @@ fn test_batch_stats_4_ones() {
 }
 #[test]
 fn test_batch_stats_5_ones() {
-    let mut d = Desc::new(&ONES[..5]).unwrap();
+    let mut d = Stats::new(&ONES[..5]).unwrap();
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(1.0));
@@ -227,7 +227,7 @@ fn test_batch_stats_5_ones() {
 
 #[test]
 fn test_batch_stats_2_ascending() {
-    let mut d = Desc::new(&ASCENDING[..2]).unwrap();
+    let mut d = Stats::new(&ASCENDING[..2]).unwrap();
     chk!(d.count(), 2u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(2.0));
@@ -245,7 +245,7 @@ fn test_batch_stats_2_ascending() {
 
 #[test]
 fn test_batch_stats_3_ascending() {
-    let mut d = Desc::new(&ASCENDING[..3]).unwrap();
+    let mut d = Stats::new(&ASCENDING[..3]).unwrap();
     chk!(d.count(), 3u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(3.0));
@@ -264,7 +264,7 @@ fn test_batch_stats_3_ascending() {
 }
 #[test]
 fn test_batch_stats_4_ascending() {
-    let mut d = Desc::new(&ASCENDING[..4]).unwrap();
+    let mut d = Stats::new(&ASCENDING[..4]).unwrap();
     chk!(d.count(), 4u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(4.0));
@@ -281,7 +281,7 @@ fn test_batch_stats_4_ascending() {
 }
 #[test]
 fn test_batch_stats_5_ascending() {
-    let mut d = Desc::new(&ASCENDING[..5]).unwrap();
+    let mut d = Stats::new(&ASCENDING[..5]).unwrap();
     chk!(d.count(), 5u32);
     chk!(d.min(), Ok(1.0));
     chk!(d.max(), Ok(5.0));
@@ -300,7 +300,7 @@ fn test_batch_stats_5_ascending() {
 #[test]
 // Call update() with 10 values that are also used in the batch tests.
 fn test_update10() {
-    let mut d = Desc::new(&VALUES).unwrap();
+    let mut d = Stats::new(&VALUES).unwrap();
     chk!(d.count(), 10);
     chk!(d.min(), Ok(-123.4));
     chk!(d.max(), Ok(115.0));

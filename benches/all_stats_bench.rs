@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, Criterion};
-use incr_stats::{batch, desc::Desc, error::Result, incr::Stats};
+use incr_stats::{batch, error::Result, incr, vec};
 use rand::Rng;
 
 // This benchmark compares incremental vs batch calculations for the situation in which the
@@ -7,7 +7,7 @@ use rand::Rng;
 // calculations, such as the mean being calculated separately for each, the incremental stats are
 // faster.
 
-fn incr_all_stats(d: &Stats) -> Result<()> {
+fn incr_all_stats(d: &incr::Stats) -> Result<()> {
     let _ = d.count();
     let _ = d.min()?;
     let _ = d.max()?;
@@ -41,7 +41,7 @@ fn batch_all_stats(a: &[f64]) -> Result<()> {
     Ok(())
 }
 
-fn desc_all_stats(d: &mut Desc) -> Result<()> {
+fn vec_all_stats(d: &mut vec::Stats) -> Result<()> {
     let _ = d.count();
     let _ = d.min()?;
     let _ = d.max()?;
@@ -67,7 +67,7 @@ pub fn all_stats_1000(c: &mut Criterion) {
     // Incremental
     c.bench_function("all_stats_1000_incr", |b| {
         b.iter(|| {
-            let mut d = Stats::new();
+            let mut d = incr::Stats::new();
             for v in &a {
                 d.update(black_box(*v)).unwrap()
             }
@@ -80,10 +80,9 @@ pub fn all_stats_1000(c: &mut Criterion) {
         b.iter(|| batch_all_stats(black_box(&a)).unwrap())
     });
 
-    // Desc
-    c.bench_function("all_stats_1000_desc", |b| {
-        let mut d = Desc::new(&a).unwrap();
-        b.iter(|| desc_all_stats(black_box(&mut d)).unwrap())
+    c.bench_function("all_stats_1000_vec", |b| {
+        let mut d = vec::Stats::new(&a).unwrap();
+        b.iter(|| vec_all_stats(black_box(&mut d)).unwrap())
     });
 }
 
