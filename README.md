@@ -66,21 +66,38 @@ println!("The kurtosis is {:.4}", batch::sample_kurtosis(&a)?);
 ```
 
 ## Which to use?
+The `incr` stats does not store the data, but only a few intermediate values needed to calculate the
+stats. It is updated one or a few values at a time. The tradeoff for eliminating data storage is
+that performing the intermediate calculations for each datum is slower than simply storing the data.
+
 Use `incr` stats if:
 * memory is limited
 * the data is unlimited, such as in streaming or continuous data applications
-* you don't want to store all of the data
+* you don't want to store and manage all of the data
 * the current stats need to be updated
 * data becomes available only one or a few points at a time, but overall stats are needed
 
+The `desc` stats struct memoizes intermediate results while performing calculations on stored data.
+This optimization ensures that dependent calculations such as the mean and variance are reused when
+needed by other stats. Repeated calls become look-ups instead of recalculations.
+
 Use the `desc` stats if:
-* maximum speed is required for the statistical calculations
-* large enough batches of data are acquired that the variation between samples is small enough to ignore
+* all of the data for analysis is present in memory
+* maximum speed is required for the statistical calculations of stored data and multiple statistics
+  are needed
+* 
+* large enough batches of data are acquired that the variation between samples is small enough to
+  ignore
 * there's not enough time for the incremental `update()`s and only time to store the data
+
+The `batch` functions are mainly included for accuracy comparisons and testing, but they can be
+faster than the ``desc` versions which have some overhead due to checking for previously-calculated
+values. If only one statistic is needed, then there's no reuse that would make the `desc` version
+faster.
 
 Use the `batch` stats if:
 * there's sufficient memory to store data
-* the absolutely fastest calculation of a single statistic is required.
+* the absolutely fastest calculation of a *single* statistic is required
 
 ## Population and Sample Statistics
 `fast_stats` provides both population and sample statistics. 
@@ -92,7 +109,8 @@ Octave](https://octave.org) stats packages, clarifying their naming and paramete
 
 `fast_stats` unit tests include examples that are confirmed to match results of the
 [R](https://www.r-project.org) and [GNU Octave](https://octave.org) stats packages to 13 decimal
-places.
+places. See the code for the corresponding [R](https://www.r-project.org) and [GNU
+Octave](https://octave.org) functions.
 
 ## Speed
 
@@ -102,8 +120,14 @@ of the incremental, memoized, and batch statistics calculations.
 The incremental statistic carry the overhead of doing the calculations of statistical moments for
 each data point update. The result is that the complete descriptive statistics can be calculated at
 any time. However, this overhead adds up, especially if the complete calculations are not often
-requested. The batch calculations are faster for larger amounts of data, if storage is available,
-for any single statistic, such as mean or skewness.
+requested. 
+
+The `desc` versions require stored data, but are optimized for rapid calculation of multiple
+statistics. 
+
+The batch calculations are faster for larger amounts of data, if storage is available, for any
+single statistic, such as mean or skewness. But if you need more than one statistic, use the `desc`
+stats to take advantage of the reuse of the other statistics' calculations.
 
 This crate is designed to efficiently calculate incremental statistics. Although batch versions of
 the statistics are provided, they aren't optimized for 
@@ -114,13 +138,13 @@ The `fast_stats` crate handles errors in a simple and consistent way. There are 
 errors:
 1. `NotEnoughData`: This error merely means that more data is needed to allow the calculation of the
    statistic. For example, the sample skewness calculation includes a division by `n-1` so must
-   include at least 2 data points. 
-1. `Undefined`: Even with enough valid data, some statistics produces undefined results. For
-   example, if all of the data is the same value, the variance is 0.0. Skewness and kurtosis, which
-   are measures of the distribution around a central tendency, don't exist. This fact is reflected
-   in the calculations by a division by the variance (ie a divide by 0.0). These are therefore
+   include at least 2 data points to avoid a division by 0.0. 
+1. `Undefined`: Even with enough valid data, some statistics produce undefined results. For example,
+   if all of the data is the same value, the variance is 0.0. Skewness and kurtosis, which are
+   measures of the distribution around a central tendency, don't exist. This fact is reflected in
+   the calculations by a division by the variance (ie a divide by 0.0). These are therefore
    undefined.
-1. `InvalidData`: The floating data is checked for NaNs and Infs from the IEEE754 standard.
+1. `InvalidData`: The floating data is checked for NaNs and Infs from the `IEEE 754` standard.
 
 Callers that don't need to make these distinctions can just react to any error.
 
