@@ -28,19 +28,19 @@ fn main() {
 
     // After some updates, we can calculate the descriptive statistics.
     match s.mean() {
-        Ok(v) => println!("The     mean is {:.4}", v),
+        Ok(v) => println!("The     mean is {:8.4}", v),
         Err(e) => println!("Error in mean calculation: {}", e),
     }
     match s.sample_variance() {
-        Ok(v) => println!("The variance is {:.4}", v),
+        Ok(v) => println!("The variance is {:8.4}", v),
         Err(e) => println!("Error in variance calculation: {}", e),
     }
     match s.sample_skewness() {
-        Ok(v) => println!("The skewness is {:.4}", v),
+        Ok(v) => println!("The skewness is {:8.4}", v),
         Err(e) => println!("Error in skewness calculation: {}", e),
     }
     match s.sample_kurtosis() {
-        Ok(v) => println!("The kurtosis is {:.4}", v),
+        Ok(v) => println!("The kurtosis is {:8.4}", v),
         Err(e) => println!("Error in kurtosis calculation: {}", e),
     }
 }

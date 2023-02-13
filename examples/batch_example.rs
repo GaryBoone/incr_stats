@@ -13,19 +13,19 @@ fn main() {
         }
     }
     match batch::mean(&a) {
-        Ok(v) => println!("The     mean is {:.4}", v),
+        Ok(v) => println!("The     mean is {:8.4}", v),
         Err(e) => println!("Error in mean: {}", e),
     }
     match batch::sample_variance(&a) {
-        Ok(v) => println!("The variance is {:.4}", v),
+        Ok(v) => println!("The variance is {:8.4}", v),
         Err(e) => println!("Error in variance: {}", e),
     }
     match batch::sample_skewness(&a) {
-        Ok(v) => println!("The skewness is {:.4}", v),
+        Ok(v) => println!("The skewness is {:8.4}", v),
         Err(e) => println!("Error in skewness: {}", e),
     }
     match batch::sample_kurtosis(&a) {
-        Ok(v) => println!("The kurtosis is {:.4}", v),
+        Ok(v) => println!("The kurtosis is {:8.4}", v),
         Err(e) => println!("Error in kurtosis: {}", e),
     }
 }
