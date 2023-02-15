@@ -2,6 +2,8 @@ use criterion::{black_box, criterion_group, Criterion};
 use incr_stats::{batch, error::Result, incr, vec};
 use rand::Rng;
 
+const MAX_DATA_SIZE: u32 = 1_000_000;
+
 // This benchmark compares incremental vs batch calculations for the situation in which the
 // application calculates all of the descriptive statistics. Due to the redundancy in the batch
 // calculations, such as the mean being calculated separately for each, the incremental stats are
@@ -41,7 +43,8 @@ fn batch_all_stats(a: &[f64]) -> Result<()> {
     Ok(())
 }
 
-fn vec_all_stats(d: &mut vec::Stats) -> Result<()> {
+fn vec_all_stats(a: &[f64]) -> Result<()> {
+    let mut d = vec::Stats::new(&a)?;
     let _ = d.count();
     let _ = d.min()?;
     let _ = d.max()?;
@@ -58,30 +61,40 @@ fn vec_all_stats(d: &mut vec::Stats) -> Result<()> {
     Ok(())
 }
 
-pub fn all_stats_1000(c: &mut Criterion) {
-    let mut rng = rand::thread_rng();
-    let mut a = vec![];
-    for _ in 0..1000 {
-        a.push(rng.gen())
-    }
-    c.bench_function("all_stats_1000_incr", |b| {
-        b.iter(|| {
-            let mut d = incr::Stats::new();
-            for v in &a {
-                d.update(black_box(*v)).unwrap()
-            }
-            black_box(incr_all_stats(&d)).unwrap();
-        })
-    });
+#[macro_export]
+macro_rules! all_stats {
+    ($c:expr, $count:expr) => {
+        let mut rng = rand::thread_rng();
+        let mut a = vec![];
+        for _ in 0..$count {
+            a.push(rng.gen())
+        }
+        $c.bench_function(&format!("all_stats_{}_incr", $count), |b| {
+            b.iter(|| {
+                let mut d = incr::Stats::new();
+                for v in &a {
+                    black_box(d.update(black_box(*v)).unwrap())
+                }
+                black_box(incr_all_stats(black_box(&d)).unwrap());
+            })
+        });
 
-    c.bench_function("all_stats_1000_batch", |b| {
-        b.iter(|| batch_all_stats(black_box(&a)).unwrap())
-    });
+        $c.bench_function(&format!("all_stats_{}_batch", $count), |b| {
+            b.iter(|| black_box(batch_all_stats(black_box(&a)).unwrap()))
+        });
 
-    c.bench_function("all_stats_1000_vec", |b| {
-        let mut d = vec::Stats::new(&a).unwrap();
-        b.iter(|| vec_all_stats(black_box(&mut d)).unwrap())
-    });
+        $c.bench_function(&format!("all_stats_{}_vec", $count), |b| {
+            b.iter(|| black_box(vec_all_stats(black_box(&a)).unwrap()))
+        });
+    };
 }
 
-criterion_group!(benches, all_stats_1000,);
+pub fn all_stats_10(c: &mut Criterion) {
+    all_stats!(c, 10);
+}
+
+pub fn all_stats_1mm(c: &mut Criterion) {
+    all_stats!(c, MAX_DATA_SIZE);
+}
+
+criterion_group!(benches, all_stats_10, all_stats_1mm);
