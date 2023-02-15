@@ -7,7 +7,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/garyboone/incr_stats"
 description = "Fast, scalable, incremental descriptive statistics in Rust"
 keywords = ["rust", "statistics", "incremental", "skewness", "kurtosis"]
-include = ["src/**/*", "LICENSE", "README.md"]
 
 [dependencies]
 criterion = "0.4.0"
