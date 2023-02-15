@@ -1,7 +1,7 @@
 
 # incr_stats
 
-## Fast Incremental Descriptive Statistics for Rust 
+## Fast, Scalable, Incremental Descriptive Statistics in Rust
 
 `incr_stats` provides time- and memory-optimized, scalable, descriptive statistics with the
 following features:
