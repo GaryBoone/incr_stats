@@ -197,7 +197,9 @@ This is why the only reason to prefer stored-array statistics is because:
 ### Benchmarks
 
 [Criterion](https://github.com/bheisler/criterion.rs) benchmarks are included to allow comparisons
-of the incremental, memoized, and batch statistics calculations.
+of the incremental, memoized, and batch statistics calculations. The actual experimental times will
+vary between machines and operating systems, so here we consider these representative and make
+relative comparisons.
 
 For datasets with 10 and 1,000,000 randomized values, here is the total time to calculate [lower is better]:
 
@@ -212,18 +214,44 @@ statistic is needed. `All stats` means that all of the statistics (`count`, `min
 | batch  |  40.124 ns   |   228.20 ns   |    3.830 ms  |    29.128 ms  |
 | vec    |  68.094 ns   |   106.80 ns   |    4.124 ms  |     8.411 ms  |
 
-As expected, for calculating just one statistic, the `batch` code is fastest, independent of dataset
-size. But if multiple stats are needed, the incremental version is fastest. As mentioned above, the
-amount of calculation is similar in both the incremental and the optimized stored-array (`vec`)
-versions, but the incremental version is faster than the optimized stored-array version by 5.1% (10
-data points) to 15.5% (1M data points).
+#### Analysis
+
+When multiple statistics are needed, the incremental (`incr`) stats is fastest, regardless of dataset
+size.
+
+As mentioned above, the amount of calculation is similar in both the incremental and the optimized
+stored-array (`vec`) versions, but the incremental version is faster than the optimized stored-array
+version by 5.1% (10 data points) to 15.5% (1M data points).
+
+As expected, for calculating just one statistic, the unoptimized stored-array version (`batch`) code
+is fastest, independent of dataset size. That's because it performs the minimal calculations for
+just one statistic.
 
 Note that for the incremental version on large (1M) datasets, the time required for calculating all
 of the stats (`7.105 ms`) was very close (1.4%) to calculating just the sample kurtosis (`7.004 ms`)
 in this benchmark run. That's because for the incremental version, the majority of the effort is
 spent on the individual point update calculations which includes intermediate values needed for all
-of the statistics. As a result, the time required for calculating the final `all stats` versus any
-individual statistic converges. 
+of the statistics. As a result, the times required for calculating the final `all stats` versus any
+individual statistic converge. 
+
+#### `incr` update and final times
+
+The incremental statistic package spends time on every `update()` doing some calculations. How
+expensive are these? And how fast is final calculation time for `incr`? 
+
+| Method | 10 values | 1M values  |
+|--------|----------:|-----------:|
+| update | 11.722 ns | 11.843 ns  |
+| final  |  2.591 ns |  2.584 ns  |
+
+This table shows the times for each individual `update()` and the final calculation of
+`sample_kurtosis()` for 10 and 1 million values.
+
+As expected, there's no significant difference in times due to dataset size.
+
+We see that each update requires <12ns to calculate the intermediate moments. This work, spread over
+all of the updates, enables the final calculation of `sample_kurtosis()` to need only 2.6ns, roughly
+a fifth of the update time.
 
 
 ## Error Handling
