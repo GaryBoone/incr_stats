@@ -1,12 +1,11 @@
 use crate::batch;
 use crate::error::{Result, StatsError};
 
-// This module provides the `descriptive()` function which efficiently
-// calculates all of the descriptive statistics. Because they are separate functions,
-// the batch functions independently calculate lower moments, causing redundancy
-// when multiple statistics are calculated. For example, several of the batch functions
-// depend on the `mean()` function, but each one calculates it again for the same data.
-// In contrast, the `descriptive()` function reuses calculations where possible.
+// This module provides optimized stored-array functions that efficiently
+// calculate all of the descriptive statistics. Efficiency is gained by taking
+// advantage of the fact that the higher order statistical moments depend on
+// lower ones, so reuse is possible. For example, kurtosis depends on variance
+// which depends on the mean.
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Stats<'a> {

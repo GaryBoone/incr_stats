@@ -31,20 +31,27 @@ impl Stats {
         if self.n_int == 0 || x > self.max {
             self.max = x
         }
+        // Perform incremental updates from the previous values. The updates are done in careful
+        // order; the values used are the prior values until they are updated.
         self.sum += x;
-        let n_minus_1 = self.n; // Prior n before increment.
+        let n_ = self.n; // Prior  n.
         self.n_int += 1;
         self.n += 1.0;
-        let delta = x - self.mean;
+        let delta = x - self.mean; // Deviation from the prior mean.
         let delta_n = delta / self.n;
         let delta_n2 = delta_n * delta_n;
-        let term1 = delta * delta_n * n_minus_1;
-        self.mean += delta_n;
+        let term1 = delta * delta_n * n_;
+        // Fourth moment, used to calculate kurtosis.
         self.m4 += term1 * delta_n2 * (self.n * self.n - 3.0 * self.n + 3.0)
             + 6.0 * delta_n2 * self.m2
             - 4.0 * delta_n * self.m3;
+        // Third moment, used to calculate skewness.
         self.m3 += term1 * delta_n * (self.n - 2.0) - 3.0 * delta_n * self.m2;
+        // Second moment, used to calculate variance.
         self.m2 += term1;
+        // First moment, the mean.
+        self.mean += delta_n;
+
         Ok(())
     }
 

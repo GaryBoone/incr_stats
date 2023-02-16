@@ -3,15 +3,13 @@ use crate::error::{Result, StatsError};
 //
 // Batch functions
 //
-// These are non-incremental, independent, functions that operate on the data passed into them.
-// Independence means that, unlike the `incr` or `desc` versions, they don't do any calculations
-// that are not required for the requested function. For example, the `incr` `update()` function
-// does intermediate moment calculations for skewness and kurtosis that are unnecessary if the only
-// statistic later requested is mean and variance. Similarly, the `desc` function does all of the
-// descriptive statistics calculations, many of which may not be requested. However, the downside of
-// independence is redundancy. If multiple statistics are requested, they may repeat calculations.
-// For example, several functions below require the mean of the data, but each will recalculate it
-// separately.
+// These are non-incremental, independent, functions that operate on the data passed into them. They
+// are closest to standard textbook formulas for the descriptive statistics. Independence means
+// that, unlike the `incr` or `vec` versions, they don't do any calculations that are not required
+// for the requested function. For example, the `incr` `update()` function does intermediate moment
+// calculations for skewness and kurtosis that are unnecessary if the only statistic later requested
+// is mean and variance. It also means that there's no reuse, as in the `vec` versions. For example,
+// several functions below require the mean of the data, but each will recalculate it separately.
 
 // Check that the data contains no NaNs, Infs, or -Infs.
 pub fn validate(data: &[f64]) -> Result<()> {
