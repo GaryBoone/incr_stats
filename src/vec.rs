@@ -42,7 +42,7 @@ impl<'a> Stats<'a> {
         if let Some(min) = self.min {
             return Ok(min);
         }
-        let min = batch::min(&self.data)?;
+        let min = batch::min(self.data)?;
         self.min = Some(min);
         Ok(min)
     }
@@ -51,7 +51,7 @@ impl<'a> Stats<'a> {
         if let Some(max) = self.max {
             return Ok(max);
         }
-        let max = batch::max(&self.data)?;
+        let max = batch::max(self.data)?;
         self.max = Some(max);
         Ok(max)
     }
@@ -60,7 +60,7 @@ impl<'a> Stats<'a> {
         if let Some(sum) = self.sum {
             return Ok(sum);
         }
-        let sum = batch::sum(&self.data)?;
+        let sum = batch::sum(self.data)?;
         self.sum = Some(sum);
         Ok(sum)
     }
@@ -68,7 +68,7 @@ impl<'a> Stats<'a> {
         if let Some(mean) = self.mean {
             return Ok(mean);
         }
-        if self.data.len() == 0 {
+        if self.data.is_empty() {
             return Err(StatsError::NotEnoughData);
         }
         let mean = self.sum()? / (self.data.len() as f64);

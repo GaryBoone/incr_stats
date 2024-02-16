@@ -26,28 +26,28 @@ pub fn count(data: &[f64]) -> u32 {
 }
 
 pub fn min(data: &[f64]) -> Result<f64> {
-    if data.len() == 0 {
+    if data.is_empty() {
         return Err(StatsError::NotEnoughData);
     }
     Ok(data.iter().fold(f64::INFINITY, |a, &b| a.min(b)))
 }
 
 pub fn max(data: &[f64]) -> Result<f64> {
-    if data.len() == 0 {
+    if data.is_empty() {
         return Err(StatsError::NotEnoughData);
     }
     Ok(data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)))
 }
 
 pub fn sum(data: &[f64]) -> Result<f64> {
-    if data.len() == 0 {
+    if data.is_empty() {
         return Err(StatsError::NotEnoughData);
     }
     Ok(data.iter().fold(0.0, |sum, v| sum + v))
 }
 
 pub fn mean(data: &[f64]) -> Result<f64> {
-    if data.len() == 0 {
+    if data.is_empty() {
         return Err(StatsError::NotEnoughData);
     }
     Ok(sum(data)? / (data.len() as f64))
