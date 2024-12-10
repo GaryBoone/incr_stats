@@ -1,6 +1,6 @@
 use crate::error::{Result, StatsError};
 
-#[derive(Default)]
+#[derive(Default, Clone, Debug)]
 pub struct Stats {
     n_int: u32, // Maintain the size as an int to avoid frequent casting.
     n: f64,
