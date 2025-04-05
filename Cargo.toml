@@ -9,8 +9,6 @@ description = "Fast, scalable, incremental descriptive statistics in Rust"
 keywords = ["rust", "statistics", "incremental", "skewness", "kurtosis"]
 
 [dependencies]
-float_eq = "1.0.1"
-rand = "0.8.5"
 thiserror = "1.0.38"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.getrandom]
@@ -23,3 +21,5 @@ harness = false
 
 [dev-dependencies]
 criterion = "0.5.1"
+float_eq = "1.0.1"
+rand = "0.8.5"
